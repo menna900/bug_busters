@@ -448,8 +448,8 @@ function setMode(mode,btn){
     }else{
         ma.style.display='block';dc.classList.remove('show');sr.classList.remove('disabled');sh.textContent='';
         const txt=document.getElementById('txt'),hint=document.getElementById('hintText');
-        if(mode==='single'){txt.placeholder='مثال: الاكل وحش والخدمة ممتازه';txt.rows=3;hint.textContent='اكتب ريفيو واحد وهحللهولك'}
-        else{txt.placeholder='كل سطر = ريفيو منفصل\nالاكل وحش والخدمة ممتازه\nالمكان حلو بس الاسعار غاليه\nالتوصيل سريع والطلب صح';txt.rows=6;hint.textContent='كل سطر بيكون ريفيو لوحده - حط كمية بلا هدلة'}
+        if(mode==='single'){txt.placeholder='مثال: الاكل وحش والخدمة ممتازه';txt.rows=3;hint.textContent='اكتب ريفيو واحد '}
+        else{txt.placeholder='كل سطر = ريفيو منفصل\nالاكل وحش والخدمة ممتازه\nالمكان حلو بس الاسعار غاليه\nالتوصيل سريع والطلب صح';txt.rows=6;hint.textContent='كل سطر بيكون ريفيو لوحده '}
     }
     document.getElementById('resultsArea').innerHTML='';
 }
