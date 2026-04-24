@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bug Busters</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&family=Cookie&display=swap" rel="stylesheet">
+    <style>
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:'Tajawal',sans-serif;background:#fff0f3;min-height:100vh;display:flex;justify-content:center;align-items:flex-start;margin:0;overflow-x:hidden;position:relative;padding:30px 15px}
+        .bubble{position:fixed;border-radius:50%;z-index:-1;filter:blur(60px);opacity:.6;pointer-events:none}
+        .b-1{width:350px;height:350px;background:#ffc1cc;top:-80px;left:-80px;animation:mb1 20s ease-in-out infinite}
+        .b-2{width:450px;height:450px;background:#ffd6e0;bottom:-120px;right:-120px;animation:mb2 25s ease-in-out infinite}
+        .b-3{width:300px;height:300px;background:#ffe4e1;top:50%;left:60%;animation:mb3 18s ease-in-out infinite}
+        .b-4{width:200px;height:200px;background:#f8bbd0;bottom:30%;left:10%;animation:mb1 22s infinite reverse}
+        @keyframes mb1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(30px,40px) scale(1.05)}}
+        @keyframes mb2{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-40px,-30px) scale(1.1)}}
+        @keyframes mb3{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(20px,-40px) scale(.95)}}
+        .page{position:absolute;width:90%;max-width:580px;transition:all .6s cubic-bezier(.4,0,.2,1)}
+        .page.hidden-right{opacity:0;transform:translateX(-80px) scale(.95);pointer-events:none}
+        .page.hidden-left{opacity:0;transform:translateX(80px) scale(.95);pointer-events:none}
+        .page.active{opacity:1;transform:translateX(0) scale(1);pointer-events:all}
+        .card{background:rgba(255,255,255,.65);backdrop-filter:blur(20px);padding:36px;border-radius:30px;border:1px solid rgba(255,255,255,.9);box-shadow:0 15px 35px rgba(233,30,99,.06);animation:floatCard 10s ease-in-out infinite}
+        @keyframes floatCard{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+        h1{font-family:'Cookie',cursive;color:#d63384;text-align:center;font-size:3.8rem;margin-bottom:0;text-shadow:2px 2px 0 #f8bbd0}
+        p.sub{text-align:center;color:#880e4f;margin:10px 0 28px;font-weight:700;font-size:1.05rem;display:flex;justify-content:center;align-items:center;gap:15px;flex-wrap:wrap}
+        .y2k-eye{width:45px;height:28px;background:#fff;border:2px solid #e91e63;border-radius:50%;position:relative;display:inline-block;box-shadow:inset 0 -2px 0 #fce4ec}
+        .y2k-eye::before{content:'';position:absolute;top:-8px;left:3px;width:26px;height:13px;border-top:2px solid #c2185b;border-left:2px solid #c2185b;border-right:2px solid #c2185b;border-radius:50% 50% 0 0}
+        .y2k-pupil{width:16px;height:16px;background:radial-gradient(circle at 30% 30%,#f48fb1,#880e4f);border-radius:50%;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);box-shadow:0 0 10px rgba(233,30,99,.4)}
+        .y2k-pupil::after{content:'✦';color:#fff;font-size:8px;position:absolute;top:2px;right:2px}
+        .y2k-eyelid{width:100%;height:0%;background:#fce4ec;position:absolute;top:0;left:0;z-index:2;animation:cafewink 6s infinite}
+        @keyframes cafewink{0%,88%,100%{height:0%;border-radius:0}93%{height:105%;border-radius:0 0 50% 50%}}
+        .form-group{margin-bottom:16px;position:relative}
+        .form-group label{display:block;color:#880e4f;font-weight:800;font-size:.88rem;margin-bottom:7px}
+        .form-group label .req{color:#e91e63;font-size:1.1rem;margin-right:2px}
+        .input-wrap{position:relative}
+        .input-wrap .icon{position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:1.1rem;pointer-events:none;opacity:.5}
+        .form-group input,.form-group select{width:100%;padding:13px 46px 13px 16px;border:1px solid #f8bbd0;border-radius:18px;font-family:'Tajawal';font-size:15px;outline:none;transition:.3s;background:rgba(255,255,255,.5);color:#880e4f;font-weight:700}
+        .form-group select{cursor:pointer;appearance:none;-webkit-appearance:none}
+        .form-group input::placeholder{color:#e91e63;opacity:.4;font-weight:400}
+        .form-group input:focus,.form-group select:focus{border-color:#e91e63;background:#fff;box-shadow:0 0 0 3px rgba(233,30,99,.1)}
+        .form-group input.error{border-color:#c62828;box-shadow:0 0 0 3px rgba(198,40,40,.1);animation:shake .4s ease-in-out}
+        @keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+        .error-msg{color:#c62828;font-size:.78rem;font-weight:700;margin-top:5px;display:none}
+        .error-msg.show{display:block}
+        .field-row{display:flex;gap:14px}
+        .field-row .form-group{flex:1}
+        button.main-btn{width:100%;padding:16px;border:none;border-radius:50px;color:#fff;font-family:'Tajawal';font-size:20px;font-weight:900;cursor:pointer;transition:.2s;background:linear-gradient(45deg,#FF6B9D,#A178DF);box-shadow:0 4px 0 #6a1b9a,0 6px 10px rgba(106,27,154,.2);text-shadow:0 1px 1px rgba(0,0,0,.1);position:relative;overflow:hidden;letter-spacing:1px;margin-top:6px}
+        button.main-btn::before{content:'';position:absolute;top:0;left:0;width:100%;height:50%;background:linear-gradient(to bottom,rgba(255,255,255,.4),rgba(255,255,255,0));border-radius:50px 50px 0 0}
+        button.main-btn:active{transform:translateY(4px);box-shadow:0 1px 0 #6a1b9a}
+        button.back-btn{background:none;border:2px solid #f8bbd0;color:#880e4f;padding:10px 24px;border-radius:50px;font-family:'Tajawal';font-weight:800;font-size:.9rem;cursor:pointer;transition:.3s;margin-bottom:16px}
+        button.back-btn:hover{border-color:#e91e63;background:rgba(233,30,99,.05)}
+        .mode-toggle{display:flex;gap:0;margin-bottom:18px;border-radius:14px;overflow:hidden;border:2px solid #f8bbd0}
+        .mode-btn{flex:1;padding:10px 6px;border:none;background:rgba(255,255,255,.4);color:#880e4f;font-family:'Tajawal';font-weight:800;font-size:.82rem;cursor:pointer;transition:.3s}
+        .mode-btn.active{background:linear-gradient(45deg,#FF6B9D,#A178DF);color:#fff;box-shadow:0 2px 10px rgba(106,27,154,.2)}
+        .dataset-controls{background:rgba(255,255,255,.5);border:1px solid #f8bbd0;border-radius:16px;padding:14px;margin-bottom:18px;display:none}
+        .dataset-controls.show{display:block}
+        .dataset-controls label{display:block;color:#880e4f;font-weight:800;font-size:.85rem;margin-bottom:6px}
+        .dataset-controls select{width:100%;padding:10px 14px;border:1px solid #f8bbd0;border-radius:14px;font-family:'Tajawal';font-size:14px;background:#fff;color:#880e4f;font-weight:700;outline:none;cursor:pointer}
+        .dataset-controls select:focus{border-color:#e91e63}
+        .dataset-count{text-align:center;color:#c2185b;font-size:.8rem;margin-top:8px;font-weight:700}
+        .hint{text-align:left;color:#c2185b;font-size:.8rem;margin-bottom:18px;opacity:.8}
+        .star-rating{display:flex;justify-content:center;gap:10px;margin-bottom:8px;direction:ltr}
+        .star-rating span{font-size:2.5rem;color:#f8bbd0;cursor:pointer;transition:color .2s,transform .2s;user-select:none}
+        .star-rating span:hover,.star-rating span.active{color:#d63384;transform:scale(1.2)}
+        .star-rating.disabled span{cursor:default;opacity:.4}
+        .star-hint{text-align:center;color:#c2185b;font-size:.8rem;margin-bottom:18px;opacity:.7;min-height:18px}
+        textarea{width:100%;padding:15px;border:1px solid #f8bbd0;border-radius:20px;font-family:'Tajawal';font-size:16px;margin-bottom:6px;outline:none;transition:.3s;resize:vertical;background:rgba(255,255,255,.5);min-height:90px}
+        textarea:focus{border-color:#e91e63;background:#fff;box-shadow:0 0 0 3px rgba(233,30,99,.1)}
+        .field-label{display:block;color:#880e4f;font-weight:800;font-size:.95rem;margin-bottom:8px}
+        .review-card{background:linear-gradient(135deg,#fff0f3 0%,#fce4ec 100%);padding:16px;border-radius:20px;border:1px solid #f8bbd0;box-shadow:0 10px 25px rgba(233,30,99,.08);margin-top:14px;animation:slideIn .4s ease-out both}
+        @keyframes slideIn{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
+        .review-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px}
+        .review-num{background:linear-gradient(45deg,#FF6B9D,#A178DF);color:#fff;padding:4px 14px;border-radius:20px;font-weight:900;font-size:.8rem}
+        .review-stars-display{direction:ltr;color:#d63384;font-size:1rem;letter-spacing:2px}
+        .review-stars-display .empty{color:#f8bbd0}
+        .review-meta{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+        .meta-tag{font-size:.72rem;padding:3px 10px;border-radius:20px;background:rgba(255,255,255,.6);color:#ad1457;font-weight:700;border:1px solid #f8bbd0}
+        .review-text-preview{color:#ad1457;font-size:.85rem;margin-bottom:10px;padding:10px 14px;background:rgba(255,255,255,.5);border-radius:12px;border-right:3px solid #f48fb1;line-height:1.7;max-height:50px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .tag{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:30px;margin:3px;font-size:12px;font-weight:800;border:2px solid;box-shadow:0 2px 5px rgba(0,0,0,.03)}
+        .pos{color:#2e7d32;background:#f1f8e9;border-color:#a5d6a7}
+        .neg{color:#c62828;background:#ffebee;border-color:#ef9a9a}
+        .neu{color:#880e4f;background:#fce4ec;border-color:#f48fb1}
+        .sentence{margin-top:10px;padding-top:10px;border-top:1px dashed #f8bbd0;color:#ad1457;font-weight:700;font-size:.8rem;line-height:1.8}
+        .summary-bar{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px;padding:14px;background:rgba(255,255,255,.6);border-radius:16px;border:1px solid #f8bbd0}
+        .summary-item{flex:1;min-width:70px;text-align:center;padding:8px;border-radius:12px}
+        .summary-item .num{font-size:1.5rem;font-weight:900;color:#d63384}
+        .summary-item .lbl{font-size:.72rem;color:#880e4f;font-weight:700}
+        .business-breakdown{margin-top:14px;padding:14px;background:rgba(255,255,255,.6);border-radius:16px;border:1px solid #f8bbd0}
+        .business-breakdown h3{color:#880e4f;font-size:.9rem;font-weight:900;margin-bottom:10px;text-align:center}
+        .biz-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px dashed #f8bbd0;font-size:.8rem}
+        .biz-row:last-child{border-bottom:none}
+        .biz-row .biz-name{color:#ad1457;font-weight:700;max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .biz-row .biz-stats{display:flex;gap:8px}
+        .biz-row .biz-stats span{font-size:.7rem;font-weight:800;padding:2px 8px;border-radius:10px}
+        .user-badge{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.5);padding:10px 16px;border-radius:14px;margin-bottom:16px;border:1px solid #f8bbd0}
+        .user-badge .avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(45deg,#FF6B9D,#A178DF);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:1rem;flex-shrink:0}
+        .user-badge .info{font-size:.82rem;color:#880e4f;font-weight:700;line-height:1.5}
+        .user-badge .info span{display:block;opacity:.6;font-weight:400;font-size:.75rem}
+        .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(100px);background:linear-gradient(45deg,#FF6B9D,#A178DF);color:#fff;padding:14px 28px;border-radius:50px;font-family:'Tajawal';font-weight:800;font-size:.95rem;box-shadow:0 8px 25px rgba(106,27,154,.3);z-index:9999;transition:transform .4s cubic-bezier(.34,1.56,.64,1);pointer-events:none;max-width:90%;text-align:center}
+        .toast.show{transform:translateX(-50%) translateY(0)}
+        #resultsArea{margin-top:0}
+        @media(max-width:500px){.field-row{flex-direction:column;gap:0}h1{font-size:3rem}.card{padding:26px 20px}.mode-btn{font-size:.72rem;padding:8px 4px}}
+    </style>
+</head>
+<body>
+<div class="bubble b-1"></div><div class="bubble b-2"></div><div class="bubble b-3"></div><div class="bubble b-4"></div>
+<div class="toast" id="toast"></div>
+
+<div class="page active" id="page1">
+<div class="card">
+    <h1>Bug Busters</h1>
+    <p class="sub">يا عميل، Bug Busters يحلل كل حاجة بالتفصيل!<div class="y2k-eye"><div class="y2k-pupil"></div><div class="y2k-eyelid"></div></div></p>
+    <div class="form-group"><label><span class="req">*</span> اسم العميل</label><div class="input-wrap"><span class="icon">👤</span><input type="text" id="userName" placeholder="اكتب اسمك هنا"></div><div class="error-msg" id="nameErr">لازم تكتب اسمك الأول</div></div>
+    <div class="form-group"><label><span class="req">*</span> المكان</label><div class="input-wrap"><span class="icon">📍</span><input type="text" id="userPlace" placeholder="مثال: المطعم، الفرع، المدينة"></div><div class="error-msg" id="placeErr">لازم تحدد المكان</div></div>
+    <div class="field-row">
+        <div class="form-group"><label><span class="req">*</span> رقم العميل</label><div class="input-wrap"><span class="icon">📱</span><input type="tel" id="userPhone" placeholder="01xxxxxxxxx" maxlength="11"></div><div class="error-msg" id="phoneErr">رقم التليفون مش مظبوط</div></div>
+        <div class="form-group"><label>الايميل</label><div class="input-wrap"><span class="icon">✉️</span><input type="email" id="userEmail" placeholder="example@mail.com"></div><div class="error-msg" id="emailErr">الإيميل مش مظبوط</div></div>
+    </div>
+    <button class="main-btn" onclick="goToAnalysis()">التالي ←</button>
+</div>
+</div>
+
+<div class="page hidden-left" id="page2">
+<div class="card">
+    <button class="back-btn" onclick="goBack()">← رجوع</button>
+    <div class="user-badge"><div class="avatar" id="avatarLetter">م</div><div class="info"><div id="badgeName">محمد</div><span id="badgePlace">📍 المكان</span></div></div>
+    <div class="mode-toggle">
+        <button class="mode-btn active" onclick="setMode('single',this)">ريفيو واحد</button>
+        <button class="mode-btn" onclick="setMode('batch',this)">عدة ريفيوهات</button>
+        <button class="mode-btn" onclick="setMode('dataset',this)">بيانات جاهزة</button>
+    </div>
+    <div id="manualArea">
+        <label class="field-label">الريفيو</label>
+        <textarea id="txt" rows="3" placeholder="مثال: الاكل وحش والخدمة ممتازه"></textarea>
+        <div class="hint" id="hintText">اكتب ريفيو واحد وهحللهولك</div>
+        <label class="field-label">التقييم بالنجوم</label>
+        <div class="star-rating" id="starRating"><span data-value="1">★</span><span data-value="2">★</span><span data-value="3">★</span><span data-value="4">★</span><span data-value="5">★</span></div>
+        <div class="star-hint" id="starHint"></div>
+    </div>
+    <div class="dataset-controls" id="datasetControls">
+        <label>اختار المكان</label>
+        <select id="bizSelect"><option value="__all__">كل الأماكن (225 ريفيو)</option></select>
+        <div class="dataset-count" id="datasetCount">225 ريفيو جاهز للتحليل</div>
+    </div>
+    <button class="main-btn" onclick="runAnalysis()">تحليل</button>
+    <div id="resultsArea"></div>
+</div>
+</div>
+
+<script>
+let userData={},selectedStars=0,currentMode='single';
+const starLabels=['','سيء جداً','سيء','متوسط','كويس','ممتاز'];
+
+const DS=[
+{id:23,text:"جئت خصيصا لتجربه طبق طاجن الملوخيه باللحم مع صحن رز كان الوقت إفطار رمضان الخدمة ممتازة والاجواء جميله جدا الطعام اعتبره بالنسبه لي تجربة غير ناجحة اطلاقا وانا من عشاق الملوخية اللحم قاسي جدا تركت قطعة اللحم ولم أكمل طعامي الملوخية وسط الرز بارد وغير ناضج بشكل صحيح",stars:3,date:"قبل 3 أيام",biz:"مطعم صبحي كابر",cat:"مطعم مأكولات مصرية",plat:"google_maps"},
+{id:25,text:"أسوأ مطعم طلبت منه اوردر من الساعة 2 المفروض يجي على الفطار جالي الساعة ٧ واتصل بخدمة العملاء قبل الفطار بربع ساعة اقولها فين الاوردر تقولي لسة بيتحضر ومش عارفة هيخلص امتى ويوصل امتى! لو مطعم تحت بير سلم كان هيبقى professional اكتر من كده",stars:1,date:"قبل 5 أيام",biz:"مطعم صبحي كابر",cat:"مطعم مأكولات مصرية",plat:"google_maps"},
+{id:65,text:"المكان جميل وفيه كوفيهات ومطاعم وستاربكس . وقعدات خارجية جميله . يستحق الزيارة في اوقات الغروب والمساء في الشتاء",stars:4,date:"قبل 3 أشهر",biz:"داون تاون القطامية",cat:"مركز تسوق",plat:"google_maps"},
+{id:107,text:"Shady",stars:5,date:"قبل 11 ساعة",biz:"شتيجنبرجر",cat:"فندق",plat:"google_maps"},
+{id:162,text:"ناس محترمه استاف محترم مدير مطعم فوق الاحترام ناس مهتمه جدا بيك و انك تخرج ب احلى تجربه…❤️❤️",stars:5,date:"قبل يومين",biz:"النيلو",cat:"مطعم مأكولات إيطالية",plat:"google_maps"},
+{id:198,text:"طلبنا سحور الاوردر جي نصه ناقص و الدليفيري اول ما مشي قفل تليفونه و نكلم المطعم مش بيرد و متسحرناش الي يطلب يراجع الاوردر كويس لأن مكان معندوش امانه",stars:1,date:"قبل 20 ساعة",biz:"مطعم عم بشندي",cat:"مطعم فلافل",plat:"google_maps"},
+{id:246,text:"معامله زي زفت في فرع وسط البلد حاجة خرا حرفا",stars:5,date:"قبل يوم واحد",biz:"كرم الشام",cat:"مطعم وجبات سريعة",plat:"google_maps"},
+{id:251,text:"موظفين سيئين جدا و الاكل مجلد و الخدمة شيئة و طول الوقت عايزين بقشيش الحمامات من غير مناديل و المكان مش نظيف خالص. الاكل بقا يا مزيت يا بارد و مجلد مع العلم انهم بيتاخرو جدا جدا فعلا الاسعار خداعة جدا بس الخدمة و الاكل سيئة للغاية",stars:1,date:"قبل 5 أيام",biz:"كرم الشام",cat:"مطعم وجبات سريعة",plat:"google_maps"},
+{id:276,text:"اكله جميل جدا و خفيف عكس بقيه مطاعم المشاوي . تحس فعلا بالجوده فاللحوم اللي بيقدمها للناس بس فالمقابل طبعا اسعاره مرتفعه شويه عن بقيه المطاعم الشعبيه.",stars:5,date:"قبل شهر",biz:"المنوفي الكبابجي - كامل المنوفي فرع القاهرة الجديدة",cat:"مطعم مأكولات مشوية",plat:"google_maps"},
+{id:280,text:"المول اتطور بس محتاج دعايه اكتر لان المول فاضي اقترح يتعمل في مطاعم اكتر",stars:3,date:"قبل 6 أيام",biz:"طيبة مول",cat:"منفذ بيع بالتجزئة",plat:"google_maps"},
+{id:314,text:"Good",stars:5,date:"قبل أسبوع",biz:"حواوشي الربيع فرع زايد",cat:"مطعم",plat:"google_maps"},
+{id:336,text:"جزيل الشكر و الامتنان لطاقم تمريض العناية المركزة القلبية و خصوصا مستر رباني و الكل الشباب العاملين بالمستشفى لقيامهم بمهامهم بافضل وجه",stars:5,date:"قبل أسبوعين",biz:"مستشفى السلام الدولى",cat:"مستشفى",plat:"google_maps"},
+{id:338,text:"ktu 7 مستشفى كويسه طاقم طبي وتمريض محترم وتجربه ممتازة شكر خاص لميس اماني ورحمه ودينا وكل تمريض وحدة الكلى ومشرفهم مستر رمضان وشكر خاص لميس دايموند لمتابعتها يوميا الاكل لذيذ والنظافه ممتازه",stars:5,date:"قبل أسبوعين",biz:"مستشفى السلام الدولى",cat:"مستشفى",plat:"google_maps"},
+{id:352,text:"انا محسن المهدي سعيد غرفه ٩١١ بشكر كل طاقم التمريض والفريق الطبي ع حسن تعاملهم والاخلاص بشكر مس امل مشرفه الدور ومس منار ومس بوسي ومس شهد ومستر حسام ومستر سلامه ومستر فوزي وكل الدكاتره دكتور شهير ماجد ودكتور هنيه والعمال شكرا",stars:5,date:"قبل 3 أسابيع",biz:"مستشفى السلام الدولى",cat:"مستشفى",plat:"google_maps"},
+{id:379,text:"الاكل طيب عموما .. والشباب الصغيرة طيبة وممتازة لكن الاخت الفي الاستقبال مش مبتسمه واستقبالها بارد جدا ومدير العمال عامل حجز على الطاولات العلى فيو كلها إلا تدفع علشان تقعد شي قمة في الاستقلال للاسف",stars:2,date:"قبل 6 أيام",biz:"أبو الزوز ـ مقهي و مطعم سوري الزمالك",cat:"مطعم مأكولات سورية",plat:"google_maps"},
+{id:386,text:"شكر خاص لاسماعيل ويوسف على الخدمة انا من السعودية تجربة ستتكرر ان شاء الله",stars:5,date:"قبل أسبوعين",biz:"أبو الزوز ـ مقهي و مطعم سوري الزمالك",cat:"مطعم مأكولات سورية",plat:"google_maps"},
+{id:398,text:"احب اشكر النادل يوسف على حسن الاستقبال",stars:5,date:"قبل أسبوعين",biz:"أبو الزوز ـ مقهي و مطعم سوري الزمالك",cat:"مطعم مأكولات سورية",plat:"google_maps"},
+{id:401,text:"شكرا من القلب علي الخدمه الجميله وشكر خاص للاخ محمد جابر وميدو قدمو لي خدمه راقيه واسلوبهم جميل بالتعامل مع الزباين والمطعم اكله حلو جدا وانص فيه والقعده خيال وشكر خاص من القلب انصحكم فيه وشكرا",stars:5,date:"قبل أسبوعين",biz:"أبو الزوز ـ مقهي و مطعم سوري الزمالك",cat:"مطعم مأكولات سورية",plat:"google_maps"},
+{id:405,text:"مطعم فوق التقييم فعلا اشتهيه اجيه من السعوديه خصيصا نظيف جدا والاكل روعه واللحم خيال",stars:5,date:"قبل شهر",biz:"مطعم انس الدمشقي",cat:"مطعم مأكولات سورية",plat:"google_maps"},
+{id:446,text:"مستوى المطعم بشكل عام من متوسط الى ضعيف الملوخيه اقيمها 7-10 المكرونه اقيمها 4-10 كلها زيت غرقانه زيت الكنافة 0-10 سيئة جدا حاطين شوي مره قشطه ولاتتعدا 5 من 100 نسبة القشطة في الكنافة والطلب يجيك مغلف ويتقفل بحدايد دباسة المفروض شريط لاصق التقييم العام 3-10 بكل مصداقيه تم الطلب عبر تطبيق توصيل وللاسف تجربة لن تتكرر",stars:2,date:"قبل شهر",biz:"دوار أم حسن",cat:"مطعم مأكولات مصرية",plat:"google_maps"},
+{id:496,text:"اصبح اكثر حيوية بوجود جملة ماركت",stars:5,date:"قبل شهر",biz:"Mirage Outlet Mall",cat:"منفذ بيع بالتجزئة",plat:"google_maps"},
+{id:530,text:"الاكل سيئ ويتعب جدا",stars:1,date:"قبل 3 أيام",biz:"مطعم زين الشام الرحاب",cat:"مطعم مأكولات سورية",plat:"google_maps"},
+{id:538,text:"غالي ومعملش خصم على طلبية كبيرة بس طعمو كويس",stars:3,date:"قبل 3 أسابيع",biz:"مطعم زين الشام الرحاب",cat:"مطعم مأكولات سورية",plat:"google_maps"},
+{id:540,text:"اكل جميل يستحق التجربة",stars:5,date:"قبل 3 أسابيع",biz:"مطعم زين الشام الرحاب",cat:"مطعم مأكولات سورية",plat:"google_maps"},
+{id:646,text:"الطعام سئ جدا لا انصح به احد يمكنك الجلوس وتناول مشروب فقط",stars:3,date:"قبل شهر",biz:"عيش + ملح",cat:"مطعم",plat:"google_maps"},
+{id:650,text:"عادي جداً ما يستاهل التعني",stars:1,date:"قبل أسبوعين",biz:"كبابجي الأزهر فرحات",cat:"مطعم عائلي",plat:"google_maps"},
+{id:671,text:"الاكل حلو جدا بس وحاتم صابر اصرفوله مكفأه",stars:5,date:"قبل أسبوع",biz:"الدهان للمشويات التجمع الخامس",cat:"مطعم مأكولات مشوية",plat:"google_maps"},
+{id:678,text:"ادهم كرم احسن سيرڤيس .. Thank you",stars:5,date:"قبل 3 أيام",biz:"مطعم ظاظا النيل",cat:"مطعم",plat:"google_maps"},
+{id:746,text:"صراحة المطعم حلو والأكل كويس جدا الطرب ممتاز جدا والكفتة كويسه الرز المعمر جيد والممبار جيد جدا طاجن العكاوى كويس بس مش افضل حاجه المجمل المطعم حلو",stars:4,date:"قبل شهر",biz:"كبابجي العربي",cat:"مطعم مأكولات مشوية",plat:"google_maps"},
+{id:886,text:"تجربة ممتازة في مطعم الدهان الأكل كان رائع جدًا والطعم مميز، والخدمة أكثر من ممتازة. حابب أشكر بشكل خاص الموظفين: كريم، أمين، وعبده على ذوقهم واحترامهم وسرعة خدمتهم.",stars:5,date:"قبل ساعتين",biz:"الدهان للمشويات فرع المعادي",cat:"مطعم",plat:"google_maps"},
+{id:895,text:"الاكل بارد وسيء مش مستوي كويس ، التهويه فالمطعم سيئه اسوء فطار في رمضان بكل صراحه",stars:1,date:"قبل أسبوع",biz:"الدهان للمشويات فرع المعادي",cat:"مطعم",plat:"google_maps"},
+{id:942,text:"محدش يحجز يا جماعة في رمضان معاملة زي الزفت والاخر سوحونا قبل الفطار بساعة ومحدش راضي ياخد الاوردر ..",stars:1,date:"قبل يومين",biz:"حضرموت شيخ المندي - فرع زايد",cat:"مطعم عائلي",plat:"google_maps"},
+{id:964,text:"الاسعار كويسه جداا.. بس قطع الفراخ او خليني اقول قطع الكتاكيت صغيره جدا جدا جدا جدا ومش نضيفه والفراخ سودا من جوه واللحم لونه غريب.. ده غير إنها شاربه كميه زيت مش طبيعيه.. اول واخر مره اجيب منهم حاجه",stars:1,date:"قبل شهرين",biz:"تشك تشكن",cat:"مطعم دجاج",plat:"google_maps"},
+{id:975,text:"الاكل حلو. بس فن عندهم لخبطة في الطلب بعض الاحيان…. وبعض الاحيان ياخذ الطلب اكثر من ساعه ونصف ع الدلفري",stars:4,date:"قبل 4 أيام",biz:"مطعم واحة اليمن",cat:"مطعم يمني",plat:"google_maps"},
+{id:1020,text:"ليس كما توقعته، مختلف تماما كجوده وطعم عن الفروع النظيفه الأخرى، بشكل عام مقبول",stars:2,date:"قبل شهر",biz:"جاد الدقي",cat:"مطعم مأكولات مصرية",plat:"google_maps"},
+{id:1029,text:"مكان رايق وقعدته حلوة",stars:5,date:"قبل يومين",biz:"ممشي مصر Mawlana Cafe",cat:"كافيه",plat:"google_maps"},
+{id:1110,text:"جيد",stars:5,date:"قبل 3 أسابيع",biz:"مطعم أوفيو المعادي",cat:"مطعم مأكولات أوروبية حديثة",plat:"google_maps"},
+{id:1173,text:"أي مطعم في الزمالك تقريبًا طعمه حلو، لأن الزمالك أصلًا منطقة راقية الأكل لذيذ والخدمة ممتازة، والويتر كان عسل بزيادة تجربة حلوة وتستاهل التقييم",stars:5,date:"قبل شهر",biz:"ميزون توماس بيتزا",cat:"مطعم بيتزا",plat:"google_maps"},
+{id:1191,text:"ناس محترمة وتعامل راقى جدا",stars:5,date:"قبل 3 أسابيع",biz:"مستشفى كليوباترا",cat:"مستشفى",plat:"google_maps"},
+{id:1202,text:"شهره علي الفاضي غالي ومش نظيف ومشغلين شويه اطفال",stars:2,date:"قبل يوم واحد",biz:"الجحش",cat:"مطعم فلافل",plat:"google_maps"},
+{id:1261,text:"مكان راقي جدا",stars:5,date:"قبل شهر",biz:"فيرست مول",cat:"مركز تسوق",plat:"google_maps"},
+{id:1272,text:"الفراخ كانت نيه وطعمها مش احسن حاجه بلس ان المخلل والكاتشب واشطة برضه طعمهم كان جودة شعبي جدا مش حاجة كويسة",stars:1,date:"قبل شهر",biz:"روستو",cat:"مطعم مأكولات سورية",plat:"google_maps"},
+{id:1279,text:"مطعم الاكل أسواء فراخ مشوية مكلتهاش واقوله نية والدم فيها وحسبت وسبت الاكل ومشيت وخدمة زي الزفت منصحش ابدا حد يروح ويدفع فيه فلوس زفت الزفت",stars:1,date:"قبل شهرين",biz:"روستو",cat:"مطعم مأكولات سورية",plat:"google_maps"},
+{id:1312,text:"أعمام الشغلانة.. الأكل جميل جدا.. السلبية الوحيدة ان مدير الصالة عايز الناس تعمل ريفيو بالعافية على المطعم على جوجل",stars:4,date:"قبل شهر",biz:"كبابجي النصر",cat:"مطعم مأكولات مشوية",plat:"google_maps"},
+{id:1347,text:"تعامل سيء جدا من المطعم",stars:1,date:"قبل شهر",biz:"Villa Caracas",cat:"مطعم مأكولات لبنانية",plat:"google_maps"},
+{id:1353,text:"الشيشه تقدم بعد الساعة 12 لذلك لم اتمكن من تجربة الاكل مع الشيشة في الفترة الصباحية .. الاجواء جميلة مبدئيا وقد افكر في الزيارة مرة اخرى",stars:4,date:"قبل شهرين",biz:"Villa Caracas",cat:"مطعم مأكولات لبنانية",plat:"google_maps"},
+{id:1355,text:"تاريخ",stars:5,date:"قبل 3 أيام",biz:"مطعم عبد الله بشندي",cat:"مطعم فلافل",plat:"google_maps"},
+{id:1398,text:"جمييييل جدا والاكل نظيف وطعمه حلووو",stars:5,date:"قبل شهر",biz:"كبابجي",cat:"مطعم مأكولات مشوية",plat:"google_maps"},
+{id:1404,text:"تجربه مختلف اوي لمحبي الاكل الخليجي والمندي وطعم مختلف بجد ومميز اوى انصح اوى في الحلو بالعريكه .. فته التمر بالقشطه والعسل مكلتهاش في مكان تاني بالحلاوة دي",stars:5,date:"قبل أسبوع",biz:"مطعم السدة للمأكولات اليمنية",cat:"مطعم يمني",plat:"google_maps"},
+{id:1440,text:"مستشفي سيئه جدا في المواعيد",stars:1,date:"قبل 3 أسابيع",biz:"المستشفي السعودي الألماني القاهرة",cat:"مستشفى",plat:"google_maps"},
+{id:1476,text:"الاكل جميل والناس متعاونه جدا شكرا جدا تسنيم وحبيبه عسل اوي",stars:5,date:"قبل يوم واحد",biz:"Vinny's Pizza",cat:"مطعم بيتزا",plat:"google_maps"},
+{id:1481,text:"تسنيم سعيد تعبت معانا جدا و معاملتها جميلة",stars:1,date:"قبل يومين",biz:"Vinny's Pizza",cat:"مطعم بيتزا",plat:"google_maps"},
+{id:1498,text:"لا انصح احد بالتجربة نهائي الخدمة سيئة جدا والاكل سيئ والسعر مبالغ فيه",stars:1,date:"قبل شهرين",biz:"مطعم الجمهورية",cat:"مطعم مأكولات مشوية",plat:"google_maps"},
+{id:1501,text:"أحلى واجمل مشاوي وحمام اصلي الأصلي جدا",stars:5,date:"قبل شهرين",biz:"مطعم الجمهورية",cat:"مطعم مأكولات مشوية",plat:"google_maps"},
+{id:1506,text:"احاي كوارع ولحمة راس وفتة",stars:5,date:"قبل شهرين",biz:"مطعم ليموزين",cat:"مطعم مأكولات مصرية",plat:"google_maps"},
+{id:1548,text:"تحفه بجدد والأجواء خطيره والأكل كان تحفه اوي وبجد نضيف جداا والخدمه كانت حلوه اوي والاصتف كان معاملتهم تحفه كويسين جدا",stars:5,date:"قبل أسبوع",biz:"مطعم واحة اليمن - فرع الشيخ زايد",cat:"مطعم يمني",plat:"google_maps"},
+{id:1573,text:"مطعم كان سابقاً مشهور وجودة الاكل لذيذ خصوصاً الحمام، لكن في الوقت الراهن أندثرت هذه الإمبراطورية السابقة والسبب عدم الالتزام بالجودة وتطوير المطعم الشهير في الوقت الراهن لا انصح الزيارة",stars:1,date:"قبل شهر",biz:"كبابجي الأزهر فرحات قسم الجمالية",cat:"مطعم مأكولات مشوية",plat:"google_maps"},
+{id:1577,text:"بسم الله ما شاء الله كل سنه وكل زياره لمصر لازم اكل وجبه عند فرحات المحل شعبي وفي داخل الاسواق الشعبيه الخاصه بالازهر ولكن يتميز بالعفويه يتميز بالطعم اللذيذ",stars:5,date:"قبل شهر",biz:"كبابجي الأزهر فرحات قسم الجمالية",cat:"مطعم مأكولات مشوية",plat:"google_maps"},
+{id:1578,text:"واخيرا تناولت الحمام والملوخية للمصرية لاول مرة الطعم غرام لذيذة جدا لكن اعتذر النظافة بالمكان سيئة جدا حتى وان كان المكان اثري وقديم يجب الاهتمام بالنظافة فالعين تأكل قبل الفم",stars:5,date:"قبل شهر",biz:"كبابجي الأزهر فرحات قسم الجمالية",cat:"مطعم مأكولات مشوية",plat:"google_maps"},
+{id:1626,text:"سيئ جدا المطعم يقرف وعدم نضافه المكان وكمان الاكل نفسه طعمه غريب كلت فراخ في اكتر من ١٠٠ مطعم مقبلنيش الطعم ده تحس فراخ ميته طعمها صعب وترابل اوفر عشان تداري علي طعم الفراخ اللي بردو باين ان فيها حاجه غلط",stars:1,date:"قبل شهر",biz:"مطعم الأصيل الدمشقي",cat:"مطعم",plat:"google_maps"},
+{id:1641,text:"كافيه عادي جدا جدا مناسب للطلاب و المذاكرة ماتنفع للسياح أمانةً و غالي مقارنة بالبقية روح ستاربكس او كاف افضل بمليون مرة",stars:2,date:"قبل أسبوعين",biz:"Holm Cafe",cat:"مقهى",plat:"google_maps"},
+{id:1780,text:"ناس قليلة الذوق بجد الخدمه ذفت و الاسلوب ذفتين مفيش اي مهنيه ولا اي فكره عن التعامل مع الزباين",stars:1,date:"قبل أسبوعين",biz:"صاج وشاورما",cat:"مطعم",plat:"google_maps"},
+{id:1786,text:"مدير صاله الزمالك ذوق ومحترم جدا كان عندي مشكله ف سندوتش نزلي غلط وقالي هنزلك واحد تاني وكان محترم معايا جدا",stars:5,date:"قبل 3 أسابيع",biz:"صاج وشاورما",cat:"مطعم",plat:"google_maps"},
+{id:1789,text:"Stuff الصالة دنيا و اسماء و فاطمة متعاونين و لذاذ جداو تعاملهم كويس اوي",stars:5,date:"قبل 3 أسابيع",biz:"صاج وشاورما",cat:"مطعم",plat:"google_maps"},
+{id:1794,text:"طلبت اولدر فرع التجمع الخامس والاوردر استغفر الله العظيم والله مايتاكل اللحمه مجلده وسوده جدا والملح في المشروم زياده جدا ٣ وجبات لحمه اكسترا وبكلمهم منتهي الاهمال من خدمة العملاء تجربه سيئه اووووووي واخر مره اتعامل معاهم",stars:1,date:"قبل أسبوعين",biz:"مأكولات أبو العز السورى",cat:"مطعم مأكولات سورية",plat:"google_maps"},
+{id:1835,text:"الاستاف بالكامل ممتاز شكرا للادارة علي اختيار العاملين بالمستشفي من دكاترة وتمريض ونظافة من الرعاية والدور السادس",stars:5,date:"قبل 3 أيام",biz:"القاهره التخصصي مستشفيات كليوبترا",cat:"مستشفى",plat:"google_maps"},
+{id:1854,text:"انصح به وبقوة .. جلسات نظيفة ومرتبة .. كذلك يوجد خيارات بشكل عام في الطعمية، وكذلك يوجد حمسات متعدده .. انصح به إفطار.",stars:5,date:"قبل شهر",biz:"طبالي - الزمالك",cat:"مطعم",plat:"google_maps"},
+{id:1859,text:"الخدمه بطيئه والاكل بارد لا اعيد التجربه مره ثانيه …",stars:1,date:"قبل شهر",biz:"طبالي - الزمالك",cat:"مطعم",plat:"google_maps"},
+{id:1869,text:"المطعم ١٠٠٪ والأحلى والأرقى لستاف هما حقيقه معطين نكهه واضافه جميله للمطعم كاتي الجندي رقم واحد ف الفرفشه توفيق الوسيم صاحب الابتسامه الجميله الاستاذ ايهاب الهادي الخلوق عبدالله الأشقر",stars:5,date:"قبل شهر",biz:"طبالي - الزمالك",cat:"مطعم",plat:"google_maps"},
+{id:1875,text:"طلبت نصف فرخة مشوى كانت اسوأ شئ وواضح انها مش تابعة للمطعم ديه تحس انه من مطعم مصرى ندمت جدا على الفلوس اللى دفعتها وكمان ٧٠ جنيه توصيل",stars:1,date:"قبل أسبوعين",biz:"ابو انس السوري الدقي",cat:"مطعم مأكولات سورية",plat:"google_maps"},
+{id:1884,text:"طلبت شاورما عربي وكريب وورق عنب وكذلك فلافل سوري، وسلطة فتوش الشاورما لذيذ ورق العنب كنت اضنه مصري مقبول الكريب الحجم كبير ويكفي كوجبة لشخص. الفلافل السوري ايضا لذيذ والحجم كبير سلطة الفتوش كانت السلطة مقطعة بشكل قطع كبيرة المكان مرتب ويتم اخذ الاكل سفري وهذا قد يؤثر على مواق الاكل اذا برد",stars:4,date:"قبل شهرين",biz:"ابو انس السوري الدقي",cat:"مطعم مأكولات سورية",plat:"google_maps"},
+{id:1908,text:"استغلالي للاسف",stars:1,date:"قبل أسبوعين",biz:"مطعم الخديوي أكتوبر",cat:"مطعم",plat:"google_maps"},
+{id:1910,text:"الاكل كويس بالنسبة للأسعار ولكن الفراخ محتاجة تسوية زيادة الخدمة سيئة جدا والاكل بييجي متأخر مع ان مكنش فيه زحمة الاطباق مش نظيفة ومش بينظفوا ورا كل زبون كويس والحمام سيء التدخين مسموح به في المكان ودي حاجة غريبة بالنسبة لمكان مقفول ومطعم عائلي اكثر",stars:3,date:"قبل شهر",biz:"مطعم الخديوي أكتوبر",cat:"مطعم",plat:"google_maps"},
+{id:1919,text:"مطعم كويس بس الاكل اتأخر شويه و الكفته كانت مش مستويه اوي بس حلوه و على فكره شوربه من احلى شورب مش زفره لانها كانت شوربه فراخ و الوجبات تحفه و عجبني المطعم",stars:4,date:"قبل 5 أشهر",biz:"مطعم الخديوي أكتوبر",cat:"مطعم",plat:"google_maps"},
+{id:1920,text:"الاكل وجوده الاكل كويسه وطبعا بهيه معروف فكل مكان ومش محتاجين نتكلم عنه بس لو ف بعض الملاحظات هتفرق طبعا زي مثلا اللتاخير ف تجهيز الاوردرات معلش دي نقطه مهمه ان مستناش كتير",stars:4,date:"قبل 5 أشهر",biz:"مطعم الخديوي أكتوبر",cat:"مطعم",plat:"google_maps"},
+{id:1933,text:"مطعم مش كويس تماما و ناس معاملتها مش محترمة بالمرة و اسلوبهم مش كويس خالص",stars:1,date:"قبل 5 أيام",biz:"تاج الشام TAG ELSHAM RESTAURANT",cat:"مطعم مأكولات سورية",plat:"google_maps"},
+{id:1961,text:"طلبنا لحم مندي ثمن مع الرز طبخ وطعم فاااخر من الاخر صراحه الأسعار جيده مقبوله ولكن صراحه المكان مليان ناس وضجيج",stars:4,date:"قبل أسبوعين",biz:"حضرموت التجمع الخامس",cat:"مطعم يمني",plat:"google_maps"},
+{id:1983,text:"اسواء تجربه لمطعم الاوردر وصل بعد ٣ ساعات و بارد جدا برغم ان حجه التاخير بتاعتهم انه الاكل بيتعمل مخصوص و طعمه سيء جداا",stars:1,date:"قبل شهرين",biz:"بيت لحم Beet Lahm",cat:"مطعم",plat:"google_maps"},
+{id:2001,text:"البيتزا حلوه ويحطون الاجبان كمية راهية، مطعم صغير مثل المطاعم الايطاليه العائلية",stars:4,date:"قبل شهر",biz:"Dido's al Dente",cat:"مطعم مأكولات إيطالية",plat:"google_maps"},
+{id:2011,text:"التعامل سيء جدا للاسف اليوم طلبت اوردر اول حاجة الورردر وصلني غلط بدل ٥ وجبات وجبة وحدة بس وانا كنت مجهزة فلوس الاوردر كامل مفيش تعامل ولا رد لا انصح احد بالتعامل او التجربة",stars:1,date:"قبل 3 أشهر",biz:"الجناني الدمشقي",cat:"مطعم مأكولات سورية",plat:"google_maps"},
+{id:2036,text:" الاجوااء جميله والاكل حلو لكن انتظرنا الين يجيبو اللحمه وماكان في ريبس وانا جايه عشانه طلبنا برسكت كان حلو صراحه والشيف عمل شو حلو والستاف جميل وذوق يستاهل التجربه",stars:5,date:"قبل شهر",biz:"مطعم ميت موت مدينة الشيخ زايد",cat:"مطعم",plat:"google_maps"},
+{id:2042,text:"تجربة اكل رائعة بس طبعا غالى الثمن",stars:5,date:"قبل شهرين",biz:"مطعم ميت موت مدينة الشيخ زايد",cat:"مطعم",plat:"google_maps"},
+{id:2064,text:"احب اشكر قسم الاغذية والمشروبات شكر خاص انهم تحرمين وذووق جدا ربنا يباركلك لهم شكر خاص أ محمد احمد أ عيد أ محمود سليمان أ احمد سيد شكرا علي اهتمامكم وحرصكم دايما علي المرضي",stars:5,date:"قبل شهر",biz:"مستشفى السلام الدولي فرع القاهرة الجديدة",cat:"مستشفى",plat:"google_maps"},
+{id:2071,text:"شكر خاص لكل العاملين بمستشفي السلام الدولي وخاصة قسم الاغذية والمشروبات ناس ذووق جدا وربنا يباركلهم بسبب رفقهم علي المرضي شكر خاص لاستاذ محمد احمد علي حسن اسلوبه وشكرا",stars:5,date:"قبل شهر",biz:"مستشفى السلام الدولي فرع القاهرة الجديدة",cat:"مستشفى",plat:"google_maps"},
+{id:2119,text:"غالي جداً الأكل لا يستاهل السعر، و بيضيف خدمة و ضريبة، و الخدمة بطئية. تجربة سيئة.",stars:1,date:"قبل أسبوع",biz:"Willows",cat:"مطعم",plat:"google_maps"},
+{id:2121,text:"كله تحفه القهوة الاكل والستاف كله تحفه خاصة عمر حلمي انسان محترم وخدوم جدا",stars:5,date:"قبل أسبوعين",biz:"Willows",cat:"مطعم",plat:"google_maps"},
+{id:2161,text:"من لا يشكر الله لا يشكر الناس صراحة أشكركم على تعاملكم اللائق ووجباتكم يلي ممتلئة بقدر ممتاز لكم مني أطيب التحايا!",stars:5,date:"قبل 4 أشهر",biz:"فطائر و بيتزا المهندسين",cat:"مطعم بيتزا",plat:"google_maps"},
+{id:2186,text:"الفندق نظيف جدا والتعامل مع النزلاء كان في غايه الرقي ونشكر بالاخص الاستاذه ولاء بالترحيب بنا وتعاونها المستمر ننصح الجميع بالحجز في فندق اطلس",stars:5,date:"قبل شهر",biz:"فندق اطلس",cat:"فندق",plat:"google_maps"},
+{id:2193,text:"المكان فيه ساحة انتظار كبيره و تعامل الناس ممتاز و في مطاعم متنوعه و المكان هادي من غير موسيقي عاليه لكن العيب في فصل الشتاء المكان غير مغطى",stars:5,date:"قبل 3 أشهر",biz:"خمسينة كافيه",cat:"مقهى",plat:"google_maps"},
+{id:2202,text:"محل سوري متخصص في المنتجات السورية، عنده تنوع كبير جدًا في الأجبان والحلويات الشرقية. الخيارات كثيرة وواضح اهتمامهم بالتشكيلة. الأسعار عمومًا تعتبر مرتفعة شوي حلاوة الجبن كانت سيئة جدًا بالنسبة لي وكذلك الآيس كريم أما البقلاوة فسعرها أشوفه مبالغ فيه نوعًا ما بشكل عام المحل مميز في بعض الأصناف وخاصة المقبلات لكنه يحتاج تحسين في بعض الحلويات وأسعاره",stars:4,date:"قبل شهر",biz:"سوريا ماركت البان اجبان حلويات",cat:"متجر بقالة",plat:"google_maps"},
+{id:2221,text:"بجد من انضف المستشفيات الي موجوده وبشكر طبعا فضيله الاستاذ الدكتور حسام الشنوفي علي المجهود والاهتمام الخبره ربنا يبارك فيه يارب المستشفي فعلا كلها ال فيها جميل وكويس جدا جدا واستقبال شيك وسرعه استجابه ومتابعه نضافه ٢٤ ساعه شكرا",stars:5,date:"قبل أسبوع",biz:"كايرو كلينك جناح النساء والولاده",cat:"مستشفى",plat:"google_maps"},
+{id:2223,text:"مستشفي خدمه ممتازه وكل شي علي ما يرام",stars:5,date:"قبل أسبوع",biz:"كايرو كلينك جناح النساء والولاده",cat:"مستشفى",plat:"google_maps"},
+{id:2232,text:"اوسخ مستشفي ربنا يولع فيها ارجوكم محدش يروح دي فيها كمية اهمال مش طبيعي",stars:1,date:"قبل 3 أسابيع",biz:"كايرو كلينك جناح النساء والولاده",cat:"مستشفى",plat:"google_maps"},
+{id:2236,text:"مستشفي ممتازة جداا وي دكتور كريم صبري كويس جداا",stars:5,date:"قبل 3 أسابيع",biz:"كايرو كلينك جناح النساء والولاده",cat:"مستشفى",plat:"google_maps"},
+{id:2238,text:"للاسف التجربه مخيبه تاخر الاكل و بعد ساعه كان بارد الاكل جدا غالي مقابل الجوده القائمين علي الخدمه صوتهم جدا عالي في صاله الطعام المطعم بحسب قيمه الخبز و بضيف قيمه مضافه علي الفاتوره قطعا لن اكرر التجربه و لا انصح أبدا به",stars:1,date:"قبل يوم واحد",biz:"مطعم سيخ مشوي التجمع الخامس",cat:"مطعم",plat:"google_maps"},
+{id:2307,text:"الدليفري قليل الذوق رفض يسلمني الاوردر قبل الفطار وانا صايم واخر عليا الاوردر لحد بعد الفطار ولسه مجاش لحد دلوقتي وانا طالبه من ٣ ساعات مفيش قلة ذوق اكتر من كده",stars:1,date:"قبل 4 أيام",biz:"ست الشام",cat:"مطعم مأكولات سورية",plat:"google_maps"},
+{id:2309,text:"باكل منه بس علشان صحابي وأرخص حاجه غير كده فهو 1/5",stars:1,date:"قبل أسبوع",biz:"ست الشام",cat:"مطعم مأكولات سورية",plat:"google_maps"},
+{id:2324,text:"الطعام جيد لكن الويترز سيئين والاكل طول قرابه ساعه",stars:3,date:"قبل شهر",biz:"فايف بيلز",cat:"مطعم",plat:"google_maps"},
+{id:2347,text:"المطعم جيد نوعا ما واسعارو جيدة بس اغلا مقارنة بغيرو وحجم الوجبة صغير الخدمة جيدة بس بتمنا تتحسن اكتر",stars:3,date:"قبل 4 أشهر",biz:"شامينا - مأكلات سورية -",cat:"مطعم مأكولات سورية",plat:"google_maps"},
+{id:2358,text:"الاكل جميل بس الاستاف وخصوصا المدير قليل الذوق جدا وبيتعامل بأسلوب شوارع لا يليق بمكان المفروض محترم",stars:1,date:"قبل أسبوع",biz:"مطعم شاشلك ( التجمع الخامس ) Shashlik Turkish Anatolian Grill Restaurant",cat:"مطعم مأكولات تركية",plat:"google_maps"},
+{id:2360,text:"كتير المطعم مرتب والاكل سوبر طيب و التعامل كتير لطيف وسريعين بنصح كتير بالمطعم التجربه كانت ممتازه As a person coming from canada I was looking for a nice experience and a delicious meal and shashlik gave us this nice experience highly recommended",stars:5,date:"قبل أسبوعين",biz:"مطعم شاشلك ( التجمع الخامس ) Shashlik Turkish Anatolian Grill Restaurant",cat:"مطعم مأكولات تركية",plat:"google_maps"},
+{id:2426,text:"من اجمد الاماكن للاكل في مدينة نصر",stars:5,date:"قبل أسبوعين",biz:"حبايب مدينة نصر",cat:"مطعم",plat:"google_maps"},
+{id:2477,text:"مكان جميل ومتوسط الاسعار",stars:5,date:"قبل 4 أشهر",biz:"El Wekala . -. براندز",cat:"متجر ملابس",plat:"google_maps"},
+{id:2488,text:"من ارقى الاماكن في التجمع واسعار كويسه و الاسطف بيتعامل بسلوك كويسه انا بجد بشكر الاونر استاذ ايهاب واستاذ عامر شكرا مراسي",stars:5,date:"قبل 4 أشهر",biz:"Marasy cafe",cat:"مقهى",plat:"google_maps"},
+{id:2497,text:"ناس قمة في الذوق والمعاملة جميلة والأستاذ طارق خصوصا ذوق فوق الوصف",stars:5,date:"قبل شهر",biz:"فندق انديانا",cat:"فندق",plat:"google_maps"},
+{id:2500,text:"سيء جدا للاسف والصور ف بوكينق غير عن الواااقع ٣٦٠ درجة",stars:1,date:"قبل شهر",biz:"فندق انديانا",cat:"فندق",plat:"google_maps"},
+{id:2524,text:"مصطفي متولي شيشه حاجه محترمه واحمد غريب",stars:5,date:"قبل يوم واحد",biz:"صاحب السعاده فرع التجمع",cat:"كافيه",plat:"google_maps"},
+{id:2536,text:"شيشية مية مية مع فتحي",stars:5,date:"قبل 4 أيام",biz:"صاحب السعاده فرع التجمع",cat:"كافيه",plat:"google_maps"},
+{id:2538,text:"فتحي بتاع الشيشه ١٠٠ ١٠٠ ا عبد الكريم خدمه ممتازة",stars:5,date:"قبل 4 أيام",biz:"صاحب السعاده فرع التجمع",cat:"كافيه",plat:"google_maps"},
+{id:2567,text:"فندق جدا سيء وغير نظيف الغبار في كل مكان في الغرفة والغرفة صغيرة صراحة مو مريح بس الموقع فقط وسعره غالي جدا",stars:2,date:"قبل 3 أيام",biz:"Holiday Express Hotel",cat:"فندق",plat:"google_maps"},
+{id:2576,text:"كنت اقامتي ليلتين بكل شفافية الموقع ممتاز و التكييف ممتاز داخل الغرفة الستارة رديئة جداً السرير مريح نوعاً لكن اللحف قديمة وفيها حرق لا يوجد مقابس كهرباء ثلاثية ما عدا فيش واحد عند دورة المياه يعني ما تقدر تشحن جوالك وتكون قريب منه بشكل عام تجربة مخيبة للأمل",stars:1,date:"قبل 3 أشهر",biz:"Holiday Express Hotel",cat:"فندق",plat:"google_maps"},
+{id:2580,text:"طعم جميل و خدمة سريعة جدا ، لكن الاسعار غالية اووووي ، بس مقدرش الوم اي مكان على التسعير نتيجة أن السوق في مصر ملوش اي قواعد ولا حد عارف يحدد قيمة العملة الحقيقية",stars:4,date:"قبل يوم واحد",biz:"مطعم شاورما ابو حاتم الدمشقي",cat:"مطعم شاورما",plat:"google_maps"},
+{id:2585,text:"لا بأس",stars:3,date:"قبل أسبوع",biz:"مطعم شاورما ابو حاتم الدمشقي",cat:"مطعم شاورما",plat:"google_maps"},
+{id:2612,text:"من اجمل المطاعم والاطلالة على النيل اكلهم رووعة وافطارهم ممتاز كمان واسعارهم جيدة جدا",stars:5,date:"قبل شهر",biz:"Dalida Cuisine el zamalek",cat:"مطعم",plat:"google_maps"},
+{id:2676,text:"تغير جو يستاهل الصراحه",stars:5,date:"قبل 3 أسابيع",biz:"Blue Nile Boat Maadi",cat:"مطعم",plat:"google_maps"},
+{id:2689,text:"Good",stars:5,date:"قبل 4 أيام",biz:"CAF Cafe - 5A",cat:"مقهى لشرب الشاي",plat:"google_maps"},
+{id:2695,text:"اكل لذيذ وأسعار معقولة",stars:5,date:"قبل شهر",biz:"مول رمسيس",cat:"مركز تسوق",plat:"google_maps"},
+{id:2770,text:"انا النهارده جبت فرخه مشويه والمفروض انها كويسه كالعاده ولكن انا شوفت اسوء فرخه في الحياه قرفتني من الاكل زفاره غريبه جدا فعلا مفيش ضمير انا زبون المحل بقالي اكتر من ٢٠ سنه والنهارده نهايه علاقتي بهذا المطعم الي الابد مطعم سىء جداجداجدا",stars:1,date:"قبل 4 أشهر",biz:"مطعم ماي كوين",cat:"مطعم",plat:"google_maps"},
+{id:2778,text:"سي جدا الاكل مش فريش لاانصح به ابدا",stars:1,date:"قبل سنة",biz:"مطعم ماي كوين",cat:"مطعم",plat:"google_maps"},
+{id:2792,text:"مكتن ممتاز والخدمه راقيه والاجواء فخمه وممتازه",stars:5,date:"قبل أسبوع",biz:"princess cafe, gateway mall Al-Rehab",cat:"مطعم",plat:"google_maps"},
+{id:2834,text:"جيد جدا",stars:5,date:"قبل 9 أشهر",biz:"مطعم وكبابجي الفي بك",cat:"مطعم مأكولات مشوية",plat:"google_maps"},
+{id:2851,text:"سلمي احلي بنوته تستقبل الجست وضحكتها حلوه موت",stars:5,date:"قبل أسبوع",biz:"مطعم وكافيه نعومي",cat:"مطعم",plat:"google_maps"},
+{id:2875,text:"الاكل كويس و كل حاجه ف المكان حلوه جدا",stars:5,date:"قبل شهرين",biz:"مطعم وكافيه نعومي",cat:"مطعم",plat:"google_maps"},
+{id:2879,text:"مكان لا يحترم عملاءه ازاي بعد الاتفاق و حجز تذاكر و يتم الغاء الحفلة فجاءة و تبليغ انها حجزت لشركة",stars:5,date:"قبل 4 أشهر",biz:"كافيه روم ارت سباس- القاهرة الجديدة",cat:"مقهى",plat:"google_maps"},
+{id:2889,text:"اول مره اجربو صراحه انا نوعية شعري مايمسك فيه الويفي احب اشكر توماس واقلو تسلم اييييدك فنااان وسريع شعري تحفه كان ويجنن ومسك فيه الويفي لتاني يوم",stars:5,date:"قبل شهر",biz:"ELLE Salon",cat:"صالون تجميل",plat:"google_maps"},
+{id:2892,text:"حابه اشكر سامح على صدقه وأمانته بيخاف ربنا في شغله ويخاف على الشعر يعني الي مش حينفع يعمله في شعرك حيقولك بكل صدق مش حينفع نفتح وحابه اشكر المدير محمود على تعامله الراقي وتوماس عملي شعري يجننننن مره حلو يعطيك الف عافيه",stars:5,date:"قبل شهر",biz:"ELLE Salon",cat:"صالون تجميل",plat:"google_maps"},
+{id:2938,text:"قبل ان اتكلم عن الخدمه اشكر الموظف محمد شحاتة من كل قلبي على حسن ضايفته وخفه دمه وحديثه معنا وعلى الخدمه الرائعة",stars:5,date:"قبل شهرين",biz:"قديمو",cat:"مطعم",plat:"google_maps"},
+{id:2952,text:"كل الشكر و التقدير لكل أسرة مستشفي تبارك كل الأطباء و التمريض علي اعلي و ارقي مستوي اهتمام بكل تفاصيل المريض و الرجه و الطمأنينه شكرا ميس ولاء مشرفه وجده الرعايه المركزه و دكتور مصطفي و كل إدارات المستشفي وخصوصا العلاقات العامه",stars:5,date:"قبل أسبوعين",biz:"مستشفى تبارك القاهرة الجديدة",cat:"مستشفى",plat:"google_maps"},
+{id:2972,text:"مكان وحش جدا والمعامله سيئه جدا والاكل مش احسن حاجه وبجد منصحش بيه",stars:1,date:"قبل شهرين",biz:"Shobak Habibi",cat:"مطعم",plat:"google_maps"},
+{id:2984,text:"طلبت كلاب سندوتش وخطير بس الايج قليل فيه جدا مستر يوسف اهتم جداا وكان لطيف واجتماعي ومساعد جداا تجربه ممتازه السيرفس جميله جداا ومكان مريح للاسف الكراميل ميكاتو الكوفي قليله جدا شكرا يوسف",stars:5,date:"قبل 10 أشهر",biz:"Shobak Habibi",cat:"مطعم",plat:"google_maps"},
+{id:2985,text:"محمد أشرف حطنا في عيونه تسلم يا معلم وبتاع الشيشة كمان والتيم كلهم عسسل الأكل لذيذ بس السمنة زايدة حبتين لكن بشكل عام اكرر التجربة",stars:5,date:"قبل 11 شهرًا",biz:"Shobak Habibi",cat:"مطعم",plat:"google_maps"},
+{id:3003,text:"ماشاء الله شغل اسراء والله بدون مجامله احلا شغل شفتو بحياتي ماشاء اللههه",stars:5,date:"قبل شهرين",biz:"Malika and Mo Nails Salon",cat:"صالون عناية بالأظافر",plat:"google_maps"},
+{id:3031,text:"لذيذ",stars:5,date:"قبل 3 أشهر",biz:"ذا بلكون كافيه الشيخ زايد",cat:"مطعم مأكولات ومشروبات",plat:"google_maps"},
+{id:3045,text:"كافية مطعم، واسع المكان جلسات خارجية وداخلية ، مناسب للاجتماعات.",stars:3,date:"قبل 8 أشهر",biz:"BRAAVOS Lounge",cat:"مطعم",plat:"google_maps"},
+{id:3053,text:"الأسعار غاليه بشكل مبالغ فيه لا انصح به ابدا",stars:1,date:"قبل سنة",biz:"سوبر ماركت مؤمن و بشار المحكمة",cat:"سوبرماركت",plat:"google_maps"},
+{id:3076,text:"شكر خاص لطاقم الطبي وتمريض الدور السادس ومسؤله العلاقات العامه شكرا جزيلا لهم",stars:5,date:"قبل شهر",biz:"مستشفى الزهيري",cat:"مستشفى",plat:"google_maps"},
+{id:3081,text:"أسعار غالية وخدمة مش كويّسة والطوارئ أي حاجة",stars:1,date:"قبل شهرين",biz:"مستشفى الزهيري",cat:"مستشفى",plat:"google_maps"},
+{id:3133,text:"الاستقبال ممتاز خدمة ممتازة الفطار جيد جدا والتنوع منتجات الافطار التعامل ممتاز جدا النظافة فى المكان على اعلى مستوى سرعة الاستجابة",stars:5,date:"قبل شهر",biz:"مطعم ويندوز",cat:"مطعم ببوفيه",plat:"google_maps"},
+{id:3206,text:"ممتازة",stars:5,date:"قبل 3 أشهر",biz:"مستشفى الجنزوري التخصصي",cat:"مستشفى",plat:"google_maps"},
+{id:3263,text:"جلسات رائعة الأكل لذيذ والخدمة مميزة",stars:5,date:"قبل 4 أشهر",biz:"Garden Promenade Café",cat:"مطعم",plat:"google_maps"},
+{id:3288,text:"كنت أقوم بجولة في المنطقة التجارية الموجود بها المقهى و استمتعت بتدخين سيجارتى الدافيدوف جولد على الرصيف المقابل للمقهى ما فى احسن من هيك",stars:5,date:"قبل 6 أشهر",biz:"ولعة كافية",cat:"مقهى",plat:"google_maps"},
+{id:3294,text:"من أفضل مطاعم الفول والطعمية بالمنطقة ، سرعة ونظافة و طعم مميز",stars:5,date:"قبل 3 أسابيع",biz:"مطعم فول وفلافل السني",cat:"مطعم فلافل",plat:"google_maps"},
+{id:3301,text:"من وجهة نظري هو أفضل مطعم هندي في القاهرة.",stars:4,date:"قبل 6 أشهر",biz:"maharaja october مهراجا اكتوبر",cat:"مطعم مأكولات هندية",plat:"google_maps"},
+{id:3355,text:"حلو ومختلف الحجم ف السندوتشات كبير",stars:5,date:"قبل شهرين",biz:"مطعم المصطفى",cat:"مطعم",plat:"google_maps"},
+{id:3437,text:"سيء جداً تعامل الموضفين فيه وفيه عنصرية وصخه ما انصح اي واحد يزوره الي يبي ينهان يروح له مكان فعلاً وصخ التعامل فيه تدفع عشان تتعامل بسوء",stars:1,date:"قبل 3 أشهر",biz:"كازابلانكا كافية و مطعم 6 أكتوبر",cat:"مطعم",plat:"google_maps"},
+{id:3439,text:"سئ للغاية الاستاف للاسف ميعرفش يعني اية باريستا ولا بيعرفو يتعاملو ولا حتي بيعرفو يقدمو مشروبات مفيش يوني فورم تعرف مين باريستا و مين جيست و الدنيا ماشية بالحب وطريقة كلام مفيش مهنية اطلاقاً",stars:1,date:"قبل 6 أشهر",biz:"كازابلانكا كافية و مطعم 6 أكتوبر",cat:"مطعم",plat:"google_maps"},
+{id:3476,text:"المطعم بجد يقرف وغالي جدا على الفاضي اللحمة زفرة جدا طلبنا طاجن بطاطس باللحمة تمنه ٣٠٠ جنيه اقسم بالله بطاطس نية لحمة زفرة جدا مطعم يقرف استحالة اطلب تاني",stars:1,date:"قبل 7 أشهر",biz:"حاتى الجيش",cat:"مطعم مأكولات مشوية",plat:"google_maps"},
+{id:3477,text:"الاكل جميل ورائع بس الأسعار مرتفعة",stars:4,date:"قبل 7 أشهر",biz:"حاتى الجيش",cat:"مطعم مأكولات مشوية",plat:"google_maps"},
+{id:3500,text:"من احسن الأماكن اللي اتعملت معاها و بجد اتبسط من كل حاجه عملت اسكين بوستر و ليزر ريموفر مع د عند فريد و بجد من اشطر و احسن الدكاتره اللي اتعملت معاهم شكرا جداا علي كل حاجه",stars:5,date:"قبل يوم واحد",biz:"Nouvel Age Aesthetic Clinics Cairo Festival City Mall Branch",cat:"عيادة طبية",plat:"google_maps"},
+{id:3507,text:"اسوأ دكاترة غير مدربين اتسببوا في حروق من الليزر ومفيش متابعة ولا اهتمام إهمال تام حتى انهم يعالجوا المريض اللي اتسببوا في ضرر ليه مش موجود اسوأ عيادة أتعاملت معاها مفيش اعتذار ولا اهتمام بعلاج الخطأ اللي اتسببوا فيه خدمة عملاء ومتابعة العميل المتضرر صفر لا انصح بها تماما",stars:1,date:"قبل 5 أيام",biz:"Nouvel Age Aesthetic Clinics Cairo Festival City Mall Branch",cat:"عيادة طبية",plat:"google_maps"},
+{id:3555,text:"طعم الاكل جميل الكفتة حلوة والفراخ الشيش متبلة جيدا . لكن اغلب العاملين يدخنون السجائر أثناء الشوى او تجهيز الطعام . بحاجة الي الاهتمام بنظافة العاملين مع عدم تدخينهم أثناء إعداد الطعام",stars:4,date:"قبل 6 أشهر",biz:"مشويات الرايق",cat:"مطعم",plat:"google_maps"},
+{id:3557,text:"خدمة ممتازة، خاصة الدكتور طارق والدكتور محمد",stars:5,date:"قبل 11 ساعة",biz:"Dental Care Clinic - Dr. Tarek Moustafa",cat:"طبيب أسنان",plat:"google_maps"},
+{id:3575,text:"من افضل الدكاتره اللي أتعاملت معهم المركز نضيف والتعقيم ممتاز شكرا لدكتور طارق وشكرا لاستاذه ندي في الاستقبال",stars:5,date:"قبل أسبوع",biz:"Dental Care Clinic - Dr. Tarek Moustafa",cat:"طبيب أسنان",plat:"google_maps"},
+{id:3576,text:"ده اكتر من اخ ودكتور انسان جدا وإمكانياته عاليه جدا وعياده مش مجرد مكان ده يعتبر مكان عائلي لينا",stars:5,date:"قبل أسبوع",biz:"Dental Care Clinic - Dr. Tarek Moustafa",cat:"طبيب أسنان",plat:"google_maps"},
+{id:3578,text:"المكان نظيف جدا والخدمه ممتازه والمواعيد مظبوطه والدكاتره ممتازين",stars:5,date:"قبل أسبوعين",biz:"Dental Care Clinic - Dr. Tarek Moustafa",cat:"طبيب أسنان",plat:"google_maps"},
+{id:3588,text:"اسوء مكان ممكن تتعالج فيه .. همهم الفلوس حتى لو المريض يموت عشان برشامة مجموعة اطباء تحت التدريب انا فى حالة ماتت اقسم بالله ادام عيني عيان مفيش استشارى",stars:1,date:"قبل 3 أشهر",biz:"مستشفى قصر العيني التعليمي الجديد",cat:"مستشفى",plat:"google_maps"},
+{id:3635,text:"The waiter is trying to force me to get my name and details I told him I value my privacy but he said its house rules العامل بيجبرني على تسجيل اسمي هل انا نزيل فرع مخابرات ولا مطعم",stars:2,date:"قبل 5 أشهر",biz:"مطعم شوجان",cat:"مطعم مأكولات يابانية",plat:"google_maps"},
+{id:3651,text:"احسن مكان بيعمل مناقيش لبناني و محترمين جدا لو في غلط في الأوردر او اي شكوى بتتحل حتى لو الاوردر من خلال طلبات highly recommended",stars:5,date:"قبل شهر",biz:"المخبز اللبناني",cat:"مطعم بيتزا",plat:"google_maps"},
+{id:3658,text:"الاسعار تعتبر غاليه جدا",stars:1,date:"قبل 3 أشهر",biz:"المخبز اللبناني",cat:"مطعم بيتزا",plat:"google_maps"},
+{id:3659,text:"خدمة عملاء سيئة جدا، طلبت منهم اوردر وحولت فلوسه على انستا باي وبعدها كلموني قالولي فيه حاجة ف الاوردر ناقصة في الفرع منتهى الاستهتار",stars:1,date:"قبل 3 أشهر",biz:"المخبز اللبناني",cat:"مطعم بيتزا",plat:"google_maps"},
+{id:3660,text:"يا ريت لو اعرف أحط زيرو بياكلوا الناس زباله . مش اول مره اطلب اوردر من المخبز و مرات قليله جدا اللي اتبسطت فيها من الاوردر ولكن في اغلب الاوردرات وخاصه بتاع مبارح الجوده والخدمه مش بتكون موجوده طلبت مناقيش بزيت زيتون الطعم كان سيئ جدا جدا و ريحه زيت الزيتون بشعه اما مستعملين زيت زيتون مغشوش او زيت قديم معفن لان ريحته لا تطاق والجبن حتى لما بطلب عكاوي صافي بيجيبوها مخلوطه بموزاريلا واشك ان الموزاريلا بقري لأنها بتوجع بطني جدا ده غير طبعا ان كل مره أوصي على عجينه سميكه تيجي رفيعه خدمه العملاء كل واحد يرميني للتاني والمسؤوله بتنكر وتقولي يمكن طعم الكرتون اللي محطوط فيه المناقيش بس زيت الزيتون عندنا ما فيهوش مشكله والجبنه ما فيهاش مشكله يعني بدل ما يشكروني لأني بديلهم رأي يساعدهم على تحسين الجوده السيئة بيقاوحوا مطعم وكواليتي متدنيه جدا لا يليق أبدا بمستوى لبنان والأكل اللبناني",stars:1,date:"قبل 3 أشهر",biz:"المخبز اللبناني",cat:"مطعم بيتزا",plat:"google_maps"},
+{id:3663,text:"مقفل في رمضان مافيه فطور",stars:1,date:"قبل 3 أيام",biz:"مطعم الدهان",cat:"مطعم مأكولات مشوية",plat:"google_maps"},
+{id:3672,text:"المكان مش نضيف والأكل وحش جدا ولقينا فيه شعر المدير غير محترم ولا حتي اتأسف وطلب الحساب كامل رغم انو ماكلناش ١٠٪",stars:1,date:"قبل شهر",biz:"مطعم الدهان",cat:"مطعم مأكولات مشوية",plat:"google_maps"},
+{id:3689,text:"عملت شعري وترتمنت اظافر ورموش ومبسوطه جدا من الخدمه سريعه وملتزمه بي مواعيد هي عسوله والاسعار مناسبه جدا",stars:5,date:"قبل 3 أسابيع",biz:"كوافير ندى",cat:"صالون تجميل",plat:"google_maps"},
+{id:3702,text:"احلا ندوش معاملة رائعة وشغل رائع انصح جدا بالتجربة",stars:5,date:"قبل شهرين",biz:"كوافير ندى",cat:"صالون تجميل",plat:"google_maps"},
+{id:3703,text:"الخدمة جداً ممتازه عملت تنظيف للبشره وعملت شعري أنا وابنتي وكانت النتيجة ممتازه انبسطت جداً",stars:5,date:"قبل شهرين",biz:"كوافير ندى",cat:"صالون تجميل",plat:"google_maps"},
+{id:3710,text:"بجد الضوافير والميكب ماشاء الله منتهي الجمال انا ديما بجيلها شغلها ماشاء الله واسعار ماشاء الله وبتنجز في الوقت جدا واسعارها ولا احلي",stars:5,date:"قبل شهرين",biz:"كوافير ندى",cat:"صالون تجميل",plat:"google_maps"},
+{id:3742,text:"الاكل تحفه و الناس جميله واجواء الموسيقى والمولوى والتنوره والمطرب كل حاجه جميله",stars:5,date:"قبل 6 أيام",biz:"sarayi resturant",cat:"مطعم مأكولات تركية",plat:"google_maps"},
+{id:3767,text:"ربنا ما يكتب على حد طوارئ المستشفى ده كافات مقطعة دكاترة بتنزل بعد نص ساعة من دخولنا الطوارئ تمريض شكلها مخيف جدا احنا سكينا أنها تمريض من شكلها و تعاملها من اساسه و زيرو نظافة دبان كتير اوي في كل مكان و الحمام معفن و تعاملو مع الحالة غلط كمان و لولا ستر الله و رد الدكتور المعالج علينا كنا اتبهدلنا مكانتش كده خالص زمان",stars:1,date:"قبل شهر",biz:"المستشفى القبطي بالقاهرة",cat:"مستشفى خاصة",plat:"google_maps"},
+{id:3951,text:"كنت اتكلمت معه على الواتس اب و بنتى ٣ سنين ونص عندها تسوس فى ٣ اسنان فى الفك العلوى و رد قلى انى كل سنه هتتكلف ١٨٠٠ حشو و كمان ٣٥٠ كشف و طلبت منه انى يعمل اى تخفيض لانى هعمل التلاتة و قلتله انى فى اماكن كتير بتعمله ب ١٥٠٠ و كان الرد اتمنى تتوفق فى مكان تانى الصراحة الرد مكانش متوقع خالص",stars:1,date:"قبل 6 أشهر",biz:"دكتور فادى رياض",cat:"عيادة أسنان",plat:"google_maps"},
+{id:3963,text:"أنا مش بتوجع عند د فادي و الدكاتره اللي عنده بالهم طويل و حلوين قوي",stars:5,date:"قبل 11 شهرًا",biz:"دكتور فادى رياض",cat:"عيادة أسنان",plat:"google_maps"},
+{id:4064,text:"كل الناس في المستشفى متعاونين ... إلا عيادة القلب ... كائنات لا ترقى لمستوى إنسان ولا يستحقوا لقب دكاتره ... تعطيل وكسل ولا مبالاة",stars:3,date:"قبل 3 أشهر",biz:"مستشفى القاهرة الجديدة",cat:"مستشفى",plat:"google_maps"},
+{id:4074,text:"للاسف كان زمان حلو جدا دلوقتى اغلبية العجل والماشيات بايظة والاجهزة العادية مش شغالة كلها كويس وفى بردوا حاجات بايظة زى الواير لازم كل اسبوع يبوظ ويقع فترة عقبال ما يتصلح غير التهوية وعدد التكييفات القليل",stars:3,date:"قبل 8 أشهر",biz:"Monster Gym",cat:"صالة رياضة",plat:"google_maps"},
+{id:4098,text:"محدش يتعامل مع المستشفى دي كلهم حوارت وصعب تلاقي حد فاهم بيتحكمو في المرضي علي اساس انهم عبيد وفوق كل ده الاسلوب السيء في تعامل الدكاتره",stars:1,date:"قبل 7 أشهر",biz:"مستشفى دار الشفاء",cat:"المستشفى الحكومي",plat:"google_maps"},
+{id:4129,text:"مكان سيئ جدا موظفين لا يفقهوا شئ عن خدمة العملاء للأسف مشيت بعد ما الأولاد اختارو ولم يقبل الدفع باستخدام محفظة جوجل",stars:1,date:"قبل 8 أشهر",biz:"تاون تيم",cat:"متجر ملابس رجالي",plat:"google_maps"},
+{id:4163,text:"اذا وصلت الموقع هاذا ف قل وداعا للفلوسك لانك بتدفع وبتندم على كل جنيه اندفع الي بتسويلك المساج مغصوبه على الشغلة وتعامل سيئ وحتى القط الي برا يبغى منك جنيه على خدمة سيئة",stars:1,date:"قبل شهر",biz:"نادى الديب الصحى بالقاهرة",cat:"غرفة لياقة",plat:"google_maps"},
+{id:4170,text:"مكان المساج دون المستوى السرر قديمه والمحل ماهو نظيف والفوط مش نظيفه والشغل اي كلام ولا انصح فيه دون المستوى وعكس صور السناب بالعربي لايليق ان يكون مكان مساج للاسف ولا يعطونك الوقت والبدكير اي كلام والحمام اي كلام الراجل يعمل المساج بالجنز والقميص وكانه سمكري شغل اي كلام",stars:1,date:"قبل 4 أشهر",biz:"نادى الديب الصحى بالقاهرة",cat:"غرفة لياقة",plat:"google_maps"},
+{id:4174,text:"مساج جيد الى حد ما. الوقت المتفق ساعه و التنفيذ نص ساعه مع طلب التبس. اذا يهمك المساج الصح ما انصحك فيه",stars:3,date:"قبل 5 أشهر",biz:"نادى الديب الصحى بالقاهرة",cat:"غرفة لياقة",plat:"google_maps"},
+{id:4248,text:"مطعم حكاية ، من أول الكاشير لحد ما تستلم الاوردر هتكون مبسوط بالتعامل معاهم اكل ممتاز كل حاجة صابحةمن اول رغيف العيش لقرص الطعمية بتتعمل أول بأول",stars:5,date:"قبل 9 أشهر",biz:"مطعم الشعب",cat:"مطعم فلافل",plat:"google_maps"},
+{id:4270,text:"وحش",stars:1,date:"قبل 4 أشهر",biz:"Esplanade cafe restaurant",cat:"مطعم",plat:"google_maps"},
+{id:4273,text:"مطعم جميل",stars:5,date:"قبل 6 أشهر",biz:"Esplanade cafe restaurant",cat:"مطعم",plat:"google_maps"},
+{id:4304,text:"معاملة زي القرف و كل ما تسأل على حاجة فالمنيو يقولك مش موجودة عالسيستم و فالاخر طلعت موجودة عادي غير انه اقل من ٤ افراد يجبرك تقعد فالشارع مش جوه",stars:1,date:"قبل 9 ساعات",biz:"بيتزا كينج باب اللوق",cat:"مطعم بيتزا",plat:"google_maps"},
+{id:4344,text:"للاسف دخلت الصالون وكلمت الريسبشن ماعطوني فرصه اشرح ايش ابغى الصالون كان فاضي مافيه ولا زبونه واقولهم شوفوا الاكستنشن ابغاها نفس الطول واحفظو اماكن تركيبها محد منتبهلي و على طول يجرو كاني اكلم نفسي ابغى فرصة اتكلم مايعطو فرصة واتفقو معاي على غسيل واستشوار وتركيب اكيتنشن كليبس ٣٥٠ واخر شيء بطلوع الروح ينادو الي يسويلي الشعر من فوق ويجي وانتظر وحاله وافهمه انه كل قطعه تتركب كذا قبل يسوي واستشور و ركبزالاكستنشن غلط ونصها ماتركبت لان غلط كله وماعندي وقت ويبغاله وقت الفك واتنكدت صراحة وفوق هذا وقت الحساب غلو السعر مع ان ماركبت الا وصلتين منها وعشان مستعجله حاسبت ومشيت من سكات صراحة كان اسوا يوم شعري فيه من يوم وصلت القاهرة",stars:1,date:"قبل شهرين",biz:"Bella salon zamalek",cat:"صالون تجميل",plat:"google_maps"},
+{id:4348,text:"من انضف وارقى الصوالين ف مصر كانت اول مره ومش اخر مره ملك المقص جوووزيف رووووعه شغله والاستشوار الرهيب الفنان كان بولا روعه ومساعدهم عصاااام فنان",stars:4,date:"قبل 3 أشهر",biz:"Bella salon zamalek",cat:"صالون تجميل",plat:"google_maps"},
+{id:4359,text:"بجد مكان محترم وناس فيه لطيفه وشغلهم عيال وربيراعى ربنا ماشاء الله مستوى نظافه فى عالى جدا وادوات تكون جديد بجد ماشا الله مكان هايل بتنمى لمديره العاملين كل التوفيق",stars:5,date:"قبل شهر",biz:"Women's Beauty salon",cat:"صالون تجميل",plat:"google_maps"},
+{id:4361,text:"المكان حلو اوي و نضيف و البنات اللي شغاله محترمه جدا شبرا كان ناقصها بيوتي سنتر نضيف كده هو بس تعليق واحد عملت رموش فوليوم سعرها ٤٠٠ ج حسيت السعر مبالغ فيه لانها رموش عاديه زي اللي بقدر اجيبها في البيت اركبها مش one by one يعني مفروض الرموش تتقسم و تتركب رمش رمش لكن في التوتال التجربه حلوه و ان شاء الله تتكرر تاني كمان عجبني الفاوتشر كل مره فيه خصم و المره الرابعه باخد حاجه فري",stars:5,date:"قبل شهرين",biz:"Women's Beauty salon",cat:"صالون تجميل",plat:"google_maps"},
+{id:4383,text:"المكان دا من اجمل الكافيهات في القاهره على انه بسيط جدا بس الخدمه فيه من اروع ما يمكن كمان المكان هادي معظم الوقت وخصوصا خلال النهار مناسب جدا للشغل الأون لاين خصوصا ان الأنترنت عندهم ممتاز الاسعار ممتازه جدا",stars:5,date:"قبل 7 أشهر",biz:"Cairo",cat:"كافيه",plat:"google_maps"},
+{id:4398,text:"حابه اشكر حنان على حسن الأستقبال و اللباقة في الحديث ثانياً الفنان جهاد عملت ويفي معاه خطييييييييير جداً اكتشفت انو اللي بعمله في الصوالين الاخرى ولا حاجة عند شغله و غير تعامله الجميل و اسلوبه الراقي و لمساته الخطيره و نصايحه بخصوص العنايه بالشعر فعلياً ندمت اني عرفته نهاية السفره بس بإذن الله ماراح اتعامل مع غيره طول فترة وجودي في القاهره",stars:5,date:"قبل 10 أشهر",biz:"Paul Raynault",cat:"صالون تجميل",plat:"google_maps"},
+{id:4411,text:"المكان جميل جدا ونظيف والعاملين اللي اشتغلوا معي في منتهى الذوق والأخلاق في الرسبشن قابلت ايه بنت جدعه جدا وبتهتم بكل الناس استقبلها لطيف وبشوشه",stars:5,date:"قبل شهرين",biz:"MOSCOW COLORS BEAUTY LOUNGE & SPA",cat:"صالون تجميل",plat:"google_maps"},
+{id:4430,text:"كل حاجة كانت تجنن المساچ رائع رائع و الإستقبال و المنتجات تجنن كلو براند استرالي ندى في الإستقبال كيوت و حبوبة أوي أوي عملنا مساج أنا وماما و خالتي و اختي والأسعار خيال",stars:5,date:"قبل 6 أشهر",biz:"MOSCOW COLORS BEAUTY LOUNGE & SPA",cat:"صالون تجميل",plat:"google_maps"},
+{id:4431,text:"صالون جميل جدًا والخدمة ممتازة سويت بدكير عند رانيا وصابرين شغلهم ممتاز جدًا وصبغة شعر عند منى الطاقم كامل ممتاز وشغلهم جميل جدا",stars:5,date:"قبل 6 ساعات",biz:"Sand salon",cat:"صالون تجميل",plat:"google_maps"},
+{id:4442,text:"الموظفة رحاب للرموش رائعة جدًا شغلها متقن، ذوقها عالي، وتعاملها راقي طلعت مبسوطة من النتيجة أنصح فيها وبقوة",stars:5,date:"قبل شهرين",biz:"Sand salon",cat:"صالون تجميل",plat:"google_maps"},
+{id:4451,text:"تسلم ايدك رانيا على أحلى نيلز فنااانه اجمد صالون في الزمالك",stars:5,date:"قبل شهرين",biz:"Sand salon",cat:"صالون تجميل",plat:"google_maps"},
+{id:4456,text:"صالون سيء جداً وحرقو شعري ولا يفهمون لا بالشعر ولا بالاسلوب الصراحة مره ما انصح فيه!",stars:1,date:"قبل شهرين",biz:"Sand salon",cat:"صالون تجميل",plat:"google_maps"},
+{id:4514,text:"مطعم جميل جداً والأكل فيه طعمه حلو ومميز جربت منه وجبة زنجر وسندوتشات شاورما وبطاطس وكبيبة كلهم أفضل من بعض شكراً ليكم وأتمنى لو تهتموا بالنضافة أكتر للشيفات لأنه مرة وصلني الأوردر فيه رائحة عطر ولكن دي كانت مرة من ضمن مرات كتير جداً كويسة فأكيد إنه كان بالخطأ",stars:5,date:"قبل 10 أشهر",biz:"Aboalyalshami",cat:"مطعم",plat:"google_maps"},
+{id:4539,text:"عندهم خدمة شوي اي حاجه تجيبها لحم أو فراخ",stars:3,date:"قبل 7 أشهر",biz:"مشويات الوزير",cat:"مطعم مأكولات مشوية",plat:"google_maps"},
+{id:4544,text:"احلي اكلات ومكان راقي جداااا",stars:5,date:"قبل سنة",biz:"مشويات الوزير",cat:"مطعم مأكولات مشوية",plat:"google_maps"},
+{id:4569,text:"حماده افضل كوفير للشعر والصالون كله حلو",stars:5,date:"قبل شهر",biz:"صالون بيلا سان",cat:"صالون تجميل",plat:"google_maps"},
+{id:4572,text:"المفروض ما يستاهل ولا نجمة النجمة دي بس عشان الكومنت رحنا ثلاثه اشخاص اثنين سوينا بدكير يد ورجل بس والثالثة سوت بدكير يد ورجل واستشور وقص الأطراف اول شي قلنا الحساب ٢٠٠٠ جنيه بعد ما خلصنا قلنا غلط في الحساب واخذ مننا ٥٦٠٠ جنية ما يعادل تقريبا ٥٠٠ ريال انا عمري في سعودية الى أغلى بي اضعاف ما سويت الخدمات دي البسيطة بدا السعر و غير البدكير والله اقل من عادي ما اتغير ولا شي ودي اصورلكم يدي ورجليني اعزكم الله طولة عليكم ما تبغي تحرقي قلبك وتنقهري لا تروحي من الاخر غير الاستقبال مكشر ومعصب للعلم رحنا بدايت الدوام وكان فاضي طلبنا منيو الاسعار قال مافي معطينا اسعار على كيفوا ما اقول غير حسبي الله ونعم الوكيل",stars:1,date:"قبل شهرين",biz:"صالون بيلا سان",cat:"صالون تجميل",plat:"google_maps"},
+{id:4615,text:"اولا الاكل سىئ السمك زفر و شوربة الجمبري طعمها سىئ و فيها قشر جمبري مع ان الجمبري مخلي و صغير الشوربه فيها قشر كتير حتي طاجن الوايت صوص بالجمبري برضو في قشر جمبري و طعمه وحش اوي خدمه مش مقابل سعر نهائي اسعاره غاليه جدا المفروض تبقي مقابل نضافه و كوالتي اكل تجربه مش هتكرر تاني",stars:1,date:"قبل 7 أشهر",biz:"Samakmak Restaurant - 6th of October Branch",cat:"مطعم مأكولات بحرية",plat:"google_maps"},
+{id:4637,text:"فندق سلمى من احسن الفنادق فندق جميل",stars:5,date:"قبل 3 أشهر",biz:"فندق الياسمين المنيل",cat:"فندق",plat:"google_maps"},
+{id:4660,text:"ممتاز",stars:5,date:"قبل سنة",biz:"مطعم حضرموت اكتوبر",cat:"مطعم أطباق اللحوم",plat:"google_maps"},
+{id:4680,text:"خدمه ممتازه ومواعيد مضبوطه دكتور ممتاز",stars:5,date:"قبل شهر",biz:"Misr Modern Clinics عيادات مصر الحديثه ( فرع مصدق )",cat:"مركز طبي",plat:"google_maps"},
+{id:4689,text:"طلبت فطيره كيري سج حشو داخلي وي قيمه مقابل سعر ممتاز",stars:4,date:"قبل 7 أشهر",biz:"بيتزا القدس",cat:"مطعم",plat:"google_maps"},
+{id:4697,text:"زباله وكذابين الاسعار اللي بيقولو عليها في فيديوهاتهم مش قريبه حتي من الاسعار اللي بتسمعها لما بترو واللي خليني اىو الموارد ده كله علشان اجيب نفس الحاجه بنفس السعر اللي موجود في بلدي او منطقتي ويمكن اغلي كمان ابقي غلطان مانصحش حد يغلط غلطتي ويروح لهم",stars:1,date:"قبل سنة",biz:"سنتر النهار",cat:"متجر ملابس حريمي",plat:"google_maps"},
+{id:4746,text:"دكتور عاطف جبر شاطر جدا",stars:5,date:"قبل 5 أيام",biz:"Platinum Clinics",cat:"عيادة متخصصة",plat:"google_maps"},
+{id:4753,text:"طلبت بيتزا ترافل لكن الصراحة ماهي ترافل الحقيقية ولاقريبة لطعم الترافل وماحصلت في القاهرة أحد يعرف يضبطها العجينة قويه شوي السعر غالي ٣٠٠ جنيه المكان كتمه",stars:2,date:"قبل سنة",biz:"ال ديفينو بيتزيريا",cat:"مطعم بيتزا",plat:"google_maps"},
+{id:4781,text:"السلام عليكم ورحمة الله وبركاته تجاربي وليس تجربة واحدة مع العيادة كثيرة وبصراحة وجدت معهم الضمير والإخلاص والتشخيص الصحيح والعلاج الشافي الوافي نتيجة لخبرة كبيرة وممتازة والشفاء في النهاية بفضل الله ثم علاجهم ما شاء الله على المواعيد مضبوطة ولا يوجد انتظار نهائيا كما بالعيادات الأخرى جزاكم الله عنا خير الجزاء وبارك الله فيكم",stars:5,date:"قبل 3 أشهر",biz:"Dr. Yehia Adel - White Pearl Dental Clinic",cat:"عيادة أسنان",plat:"google_maps"},
+{id:4809,text:"عيادة نظيفة دكاترة رائعين مش اخر زياره",stars:5,date:"قبل أسبوعين",biz:"Platinum Clinics - عيادات بلاتينيوم",cat:"مركز طبي",plat:"google_maps"},
+{id:4831,text:"خامة جيدة اسعار متوسطة تعديل فيه عيوب صناعة اشتريت 3 بنطلونات واحد فيهم وجدت به بعض العيوب الغير قابلة للإصلاح",stars:2,date:"قبل 7 أشهر",biz:"منز كلوب",cat:"متجر ملابس رجالي",plat:"google_maps"},
+{id:4893,text:"مستشفى نضيفه تمريض ممتاز دكاتره محترمه رائعه جدا جدا شخصيا بلنسبه ليا كانت اكتر من رائعه وربنا يشفي كل مريض",stars:5,date:"قبل 11 شهرًا",biz:"مستشفى مصر الجديدة التخصصي",cat:"مستشفى",plat:"google_maps"},
+{id:4894,text:"اتقدم بخالص الشكر لجميع طاقم الدور السادس ولإدارة المستشفي على حسن الاستقبال",stars:5,date:"قبل سنة",biz:"مستشفى مصر الجديدة التخصصي",cat:"مستشفى",plat:"google_maps"},
+{id:4918,text:"من اروع الصوالين ورقي معاملة والتساريح ممتازة بصراحة أنا وصاحباتي ما نختار إلا النخبه وحقيقي فنانين وبحكم اني إعلامية وما أختار إلا الشي اللي يليق بستايلي اخترت طوني",stars:5,date:"قبل شهرين",biz:"Tony Beauty Lounge",cat:"مصفف الشعر",plat:"google_maps"},
+{id:4921,text:"صالون راقي وجميل جدا والمعامله لطيفة والخدمه ممتازة والاسعار مميزة",stars:5,date:"قبل شهرين",biz:"Tony Beauty Lounge",cat:"مصفف الشعر",plat:"google_maps"},
+{id:4939,text:"مع الاسف اخلاق الموظفات سيئه طلعنا من المحل والسبب هم",stars:2,date:"قبل 5 أشهر",biz:"القاضي وحسين",cat:"متجر ملابس",plat:"google_maps"},
+{id:4953,text:"بصراحه الخدمة ممتازة ، الاستقبال رائع و كل حاجه ماشية بنظام واحترافية شكرا ليكم علي تعاملكم الراقي",stars:5,date:"قبل 6 أشهر",biz:"عيادات العبد للأسنان",cat:"عيادة أسنان",plat:"google_maps"},
+{id:4984,text:"افضل دكتور ف مصر",stars:5,date:"قبل 5 أشهر",biz:"Glossy smile Dental Clinic Syrian alrehab",cat:"عيادة أسنان",plat:"google_maps"},
+{id:4990,text:"ممتاز",stars:5,date:"قبل 5 أشهر",biz:"صيدليات دلمار وعطا الله",cat:"صيدلية",plat:"google_maps"},
+{id:5036,text:"اسعارة تعتبر غاليه و عنده مشكله مع الكاشير",stars:2,date:"قبل 9 أشهر",biz:"سوبر ماركت البركه",cat:"سوبرماركت",plat:"google_maps"},
+{id:5051,text:"شكرا عام لمركز الفارابي و خصوصا لدكتور طارق الحداد الزراعه سريعه و غير مؤلمه",stars:5,date:"قبل 5 أيام",biz:"عيادات الفارابي - Al- Farabi Clinics",cat:"طبيب أسنان",plat:"google_maps"},
+{id:5052,text:"مكان محترم وخدمة كويسه جدا والاستاف كله بروفشنال خصوصا تجربتي مع دكتوره داليا من اشطر وامهر الدكاترة اللي قابلتهم وارتحت للتعامل معاهم",stars:5,date:"قبل 3 أسابيع",biz:"عيادات الفارابي - Al- Farabi Clinics",cat:"طبيب أسنان",plat:"google_maps"},
+{id:5120,text:"كافيه جميل جدا والشباب خدومين ومحترمين بالاخص شيكه الزمالك احلى واحد",stars:5,date:"قبل سنة",biz:"papa cafe & resturant",cat:"مطعم",plat:"google_maps"},
+{id:5121,text:"الاجواء جميله ، الشيشه افضل شيشه في الزمالك ، الخدمه ممتازه ، الاكل لذيذ بس بيتأخر شويه.",stars:5,date:"قبل سنة",biz:"papa cafe & resturant",cat:"مطعم",plat:"google_maps"},
+{id:5143,text:"الاظافر خيال وشغلهم حلو مره وسما مره حلو شغلها خطيرررر",stars:5,date:"قبل شهر",biz:"Eclat Beauty Salon",cat:"صالون تجميل",plat:"google_maps"},
+{id:5166,text:"بصراحة حاب أشكر أ. رحمة على استقبالها الرائع وتعاملها الراقي من أول ما دخلت العيادة شخصية محترمة ولبقة وتعطي المراجع شعور بالراحة باهتمامها وابتسامتها اللطيفة شغلها مرتب وسريعة في إنهاء الإجراءات والمواعيد وترد على الاستفسارات بكل ذوق واحترام تجربتي معها كانت ممتازة جدًا وتستاهل فعلاً خمس نجوم يعطيها العافية وما قصّرت",stars:5,date:"قبل 3 أشهر",biz:"Guarantee Dent",cat:"عيادة أسنان",plat:"google_maps"}
+];
+
+// استخراج قائمة الأماكن الفريدة
+const uniqueBiz=[...new Set(DS.map(d=>d.biz))].sort();
+const bizSelect=document.getElementById('bizSelect');
+uniqueBiz.forEach(b=>{
+    let count=DS.filter(d=>d.biz===b).length;
+    let opt=document.createElement('option');
+    opt.value=b; opt.textContent=`${b} (${count} ريفيو)`;
+    bizSelect.appendChild(opt);
+});
+bizSelect.addEventListener('change',function(){
+    let v=this.value;
+    let count=v==='__all__'?DS.length:DS.filter(d=>d.biz===v).length;
+    document.getElementById('datasetCount').textContent=count+' ريفيو جاهز للتحليل';
+});
+
+// النجوم
+const stars=document.querySelectorAll('#starRating span');
+stars.forEach(s=>{
+    s.addEventListener('mouseenter',function(){document.getElementById('starHint').textContent=starLabels[this.getAttribute('data-value')]});
+    s.addEventListener('click',function(){
+        selectedStars=parseInt(this.getAttribute('data-value'));
+        stars.forEach(x=>x.classList.remove('active'));
+        for(let i=0;i<selectedStars;i++)stars[i].classList.add('active');
+        document.getElementById('starHint').textContent=starLabels[selectedStars];
+    });
+});
+document.getElementById('starRating').addEventListener('mouseleave',function(){document.getElementById('starHint').textContent=selectedStars?starLabels[selectedStars]:''});
+
+['userName','userPlace','userPhone','userEmail'].forEach(id=>{
+    document.getElementById(id).addEventListener('input',function(){
+        this.classList.remove('error');
+        let e=id.replace('user','').toLowerCase()+'Err';
+        let el=document.getElementById(e);if(el)el.classList.remove('show');
+    });
+});
+
+function validate(){
+    let ok=true,n=document.getElementById('userName').value.trim(),p=document.getElementById('userPlace').value.trim(),ph=document.getElementById('userPhone').value.trim(),em=document.getElementById('userEmail').value.trim();
+    if(!n){document.getElementById('userName').classList.add('error');document.getElementById('nameErr').classList.add('show');ok=false}
+    if(!p){document.getElementById('userPlace').classList.add('error');document.getElementById('placeErr').classList.add('show');ok=false}
+    if(!ph||!/^01[0-9]{9}$/.test(ph)){document.getElementById('userPhone').classList.add('error');document.getElementById('phoneErr').classList.add('show');ok=false}
+    if(em&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)){document.getElementById('userEmail').classList.add('error');document.getElementById('emailErr').classList.add('show');ok=false}
+    return ok;
+}
+
+function goToAnalysis(){
+    if(!validate())return;
+    userData={name:document.getElementById('userName').value.trim(),place:document.getElementById('userPlace').value.trim(),phone:document.getElementById('userPhone').value.trim(),email:document.getElementById('userEmail').value.trim()};
+    document.getElementById('avatarLetter').textContent=userData.name.charAt(0);
+    document.getElementById('badgeName').textContent=userData.name;
+    document.getElementById('badgePlace').textContent='📍 '+userData.place;
+    document.getElementById('page1').classList.remove('active');document.getElementById('page1').classList.add('hidden-right');
+    document.getElementById('page2').classList.remove('hidden-left');document.getElementById('page2').classList.add('active');
+}
+function goBack(){
+    document.getElementById('page2').classList.remove('active');document.getElementById('page2').classList.add('hidden-left');
+    document.getElementById('page1').classList.remove('hidden-right');document.getElementById('page1').classList.add('active');
+}
+
+function setMode(mode,btn){
+    currentMode=mode;
+    document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+    const ma=document.getElementById('manualArea'),dc=document.getElementById('datasetControls'),sr=document.getElementById('starRating'),sh=document.getElementById('starHint');
+    if(mode==='dataset'){
+        ma.style.display='none';dc.classList.add('show');sr.classList.add('disabled');sh.textContent='النجوم من الداتا';
+    }else{
+        ma.style.display='block';dc.classList.remove('show');sr.classList.remove('disabled');sh.textContent='';
+        const txt=document.getElementById('txt'),hint=document.getElementById('hintText');
+        if(mode==='single'){txt.placeholder='مثال: الاكل وحش والخدمة ممتازه';txt.rows=3;hint.textContent='اكتب ريفيو واحد وهحللهولك'}
+        else{txt.placeholder='كل سطر = ريفيو منفصل\nالاكل وحش والخدمة ممتازه\nالمكان حلو بس الاسعار غاليه\nالتوصيل سريع والطلب صح';txt.rows=6;hint.textContent='كل سطر بيكون ريفيو لوحده - حط كمية بلا هدلة'}
+    }
+    document.getElementById('resultsArea').innerHTML='';
+}
+
+// NLP
+const Asp={food:["اكل","طعم","فراخ","بيتزا","شاورما","كباب","فول","سندوتش","شيشه","مشروبات","حلويات","مندي","مكرونه","كنافه","سمك","جمبري","شوربه","رز","لحم","كفتة","فرخ","حمام","فتة","ملوخيه","طعميه","سندوتشات","بسكويت","وجبات","شوربة","بيتزا","عجاين","مناقيش","جبن","زنجير"],service:["خدم","ستاف","موظفين","وايتر","تعامل","كابتن","سواق","استقبال","دعم","نادل","سيرفس","ريسبشن","استاف"],price:["سعر","اسعار","غالي","رخيص","فلوس","مبالغ","تسعير"],ambiance:["مكان","جلس","ديكور","زحم","هادي","اجواء","اجوااء","فيو","قعدته"],cleanliness:["نظاف","نضيف","وسخ","قذر","عفن","غبار","دبان"],delivery:["توصيل","دليفر","مندوب","وصل","اوردر","دلفري"],app_experience:["تطبيق","ابلكيشن","برنامج","موقع"]};
+const Pos=["حلو","ممتاز","جميل","تحفه","رائع","جيد","لذيذ","سريع","محترم","طازج","عالمي","محترمه","محترف","عسل","خدوم","راقي","رقي","بروفشنال","فنان","خطير","عالي","مميز","متميز","انضف","نضيف","خفيف"];
+const Neg=["وحش","سيء","فاشل","زباله","تأخير","بارد","ناشف","قذر","وسخ","زفت","بايظ","سيئه","اسواء","مجلد","نية","سودا","زفره","يقرف","مخيبه","اهمال","استغلالي","كذابين","خرا","قرف"];
+const aN={food:"الاكل",service:"الخدمة",price:"الاسعار",ambiance:"المكان",cleanliness:"النظافة",delivery:"التوصيل",app_experience:"التطبيق"};
+
+function analyze(text,id,rating,extra){
+    let c=text.replace(/[إأآا]/g,"ا").replace(/ة/g,"ه").replace(/ى/g,"ي");
+    let asp={},list=[];
+    for(let k in Asp){
+        let found=false,ctx="";
+        for(let w of Asp[k]){let i=c.indexOf(w);if(i!==-1){found=true;ctx=c.substring(Math.max(0,i-20),Math.min(c.length,i+w.length+20));break}}
+        if(found){list.push(k);let s=0;for(let p of Pos)if(ctx.includes(p))s++;for(let n of Neg)if(ctx.includes(n))s--;if((ctx.includes("مش")||ctx.includes("ما"))&&s>0)s=-1;asp[k]=s>0?"positive":(s<0?"negative":"neutral")}
+    }
+    let r={review_id:id,review_text:text,star_rating:rating,aspects:list.length?list:["none"],aspect_sentiments:list.length?asp:{none:"neutral"}};
+    if(extra)Object.assign(r,extra);
+    return r;
+}
+
+function starsHTML(r){let h='<div class="review-stars-display">';for(let i=1;i<=5;i++)h+=i<=r?'★':'<span class="empty">★</span>';return h+'</div>'}
+
+function renderCard(data,idx){
+    let h=`<div class="review-card" style="animation-delay:${idx*0.05}s">`;
+    h+=`<div class="review-header"><span class="review-num">#${data.review_id}</span>${starsHTML(data.star_rating)}</div>`;
+    let meta=[];
+    if(data.business_name)meta.push(data.business_name);
+    if(data.business_category)meta.push(data.business_category);
+    if(data.date)meta.push(data.date);
+    if(data.platform)meta.push(data.platform);
+    if(meta.length)h+=`<div class="review-meta">${meta.map(m=>`<span class="meta-tag">${m}</span>`).join('')}</div>`;
+    h+=`<div class="review-text-preview">${data.review_text}</div><div>`;
+    for(let a in data.aspect_sentiments){let s=data.aspect_sentiments[a],cl=s==='positive'?'pos':(s==='negative'?'neg':'neu');h+=`<span class="tag ${cl}">${aN[a]||a}: ${s}</span>`}
+    h+=`</div>`;
+    let sent=[];for(let a in data.aspect_sentiments){let s=data.aspect_sentiments[a],nm=aN[a]||a;sent.push(`${nm} ${s==='positive'?'إيجابي':(s==='negative'?'سلبي':'محايد')}`)}
+    h+=`<div class="sentence">${sent.join(' · ')}</div></div>`;return h;
+}
+
+function renderSummary(results){
+    let tP=0,tN=0,tNe=0,ac={};results.forEach(r=>{for(let a in r.aspect_sentiments){let s=r.aspect_sentiments[a];if(a==='none')continue;if(!ac[a])ac[a]={positive:0,negative:0,neutral:0};ac[a][s]++;if(s==='positive')tP++;else if(s==='negative')tN++;else tNe++}});
+    let avg=(results.reduce((s,r)=>s+(r.star_rating||0),0)/results.length).toFixed(1);
+    let h=`<div class="summary-bar">`;
+    h+=`<div class="summary-item"><div class="num">${results.length}</div><div class="lbl">ريفيو</div></div>`;
+    h+=`<div class="summary-item"><div class="num">${avg}</div><div class="lbl">متوسط النجوم</div></div>`;
+    h+=`<div class="summary-item"><div class="num" style="color:#2e7d32">${tP}</div><div class="lbl">إيجابي</div></div>`;
+    h+=`<div class="summary-item"><div class="num" style="color:#c62828">${tN}</div><div class="lbl">سلبي</div></div>`;
+    h+=`<div class="summary-item"><div class="num" style="color:#880e4f">${tNe}</div><div class="lbl">محايد</div></div></div>`;
+    return h;
+}
+
+function renderBizBreakdown(results){
+    let bizMap={};
+    results.forEach(r=>{
+        if(!r.business_name)return;
+        if(!bizMap[r.business_name])bizMap[r.business_name]={count:0,pos:0,neg:0,neu:0,cat:r.business_category||''};
+        bizMap[r.business_name].count++;
+        for(let a in r.aspect_sentiments){
+            if(a==='none')continue;
+            let s=r.aspect_sentiments[a];
+            if(s==='positive')bizMap[r.business_name].pos++;
+            else if(s==='negative')bizMap[r.business_name].neg++;
+            else bizMap[r.business_name].neu++;
+        }
+    });
+    let sorted=Object.entries(bizMap).sort((a,b)=>b[1].count-a[1].count);
+    if(!sorted.length)return'';
+    let h=`<div class="business-breakdown"><h3>توزيع الأماكن</h3>`;
+    sorted.slice(0,15).forEach(([name,d])=>{
+        h+=`<div class="biz-row"><span class="biz-name">${name}</span><div class="biz-stats">`;
+        h+=`<span style="background:#f1f8e9;color:#2e7d32">+${d.pos}</span>`;
+        h+=`<span style="background:#ffebee;color:#c62828">-${d.neg}</span>`;
+        h+=`<span style="background:#fce4ec;color:#880e4f">=${d.neu}</span>`;
+        h+=`<span style="background:#f3e5f5;color:#6a1b9a">${d.count} ر.</span>`;
+        h+=`</div></div>`;
+    });
+    h+=`</div>`;return h;
+}
+
+function showToast(msg){let t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}
+
+function dlJSON(data,name){let b=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});let a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=name;a.style.display="none";document.body.appendChild(a);a.click();document.body.removeChild(a)}
+
+function runAnalysis(){
+    let results=[],isDataset=currentMode==='dataset';
+    if(isDataset){
+        let sel=document.getElementById('bizSelect').value;
+        let filtered=sel==='__all__'?DS:DS.filter(d=>d.biz===sel);
+        if(!filtered.length){showToast('مفيش ريفيوهات للأماكن دي');return}
+        results=filtered.map(d=>analyze(d.text,d.id,d.stars,{business_name:d.biz,business_category:d.cat,date:d.date,platform:d.plat}));
+    }else{
+        let raw=document.getElementById('txt').value.trim();
+        if(!raw){showToast('اكتب حاجة الأول يا حبيبي!');return}
+        let reviews=currentMode==='single'?[raw]:raw.split('\n').map(l=>l.trim()).filter(l=>l.length>0);
+        if(!reviews.length){showToast('مفيش ريفيوهات فاضية دي!');return}
+        results=reviews.map((r,i)=>analyze(r,i+1,selectedStars));
+    }
+    let area=document.getElementById('resultsArea'),html='';
+    if(results.length>1){html+=renderSummary(results);if(isDataset)html+=renderBizBreakdown(results)}
+    results.forEach((r,i)=>html+=renderCard(r,i));
+    area.innerHTML=html;
+    let output={customer:userData,reviews:results};
+    let fn=isDataset?`dataset_${results.length}_reviews.json`:(results.length===1?'single_review.json':`${results.length}_reviews.json`);
+    dlJSON(output,fn);
+    let msg=results.length===1?'ريفيو واحد اتصلح!':`${results.length} ريفيو اتصلحوا!`;
+    showToast(msg+' ↓ الملف نزل');
+}
+</script>
+</body>
+</html>
